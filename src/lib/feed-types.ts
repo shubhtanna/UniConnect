@@ -1,4 +1,14 @@
 export type FeedType = "community" | "spotlight";
+export type ReportInput = {
+  category:
+    | "harassment"
+    | "hate_or_abuse"
+    | "spam_or_scam"
+    | "unsafe_link"
+    | "privacy"
+    | "other";
+  reason: string;
+};
 
 export type FeedComment = {
   id: string;
@@ -7,6 +17,8 @@ export type FeedComment = {
   authorPhotoUrl: string;
   text: string;
   reportCount: number;
+  isOwnedByCurrentUser: boolean;
+  editedAt?: string;
   createdAt: string;
 };
 
@@ -28,6 +40,8 @@ export type FeedPost = {
   reportCount: number;
   likedByCurrentUser: boolean;
   sharedByCurrentUser: boolean;
+  isOwnedByCurrentUser: boolean;
+  editedAt?: string;
   comments: FeedComment[];
   createdAt: string;
 };

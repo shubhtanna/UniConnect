@@ -2,7 +2,13 @@ import { randomUUID } from "crypto";
 import { Types } from "mongoose";
 import { connectToDatabase } from "@/lib/db";
 import { getServerEnv } from "@/lib/env";
-import type { CreatePostInput, FeedComment, FeedPost, FeedType } from "@/lib/feed-types";
+import type {
+  CreatePostInput,
+  FeedComment,
+  FeedPost,
+  FeedType,
+  ReportInput,
+} from "@/lib/feed-types";
 import { getProfileSummaries } from "@/lib/profile-store";
 import { Post } from "@/models/Post";
 
@@ -11,6 +17,8 @@ type MemoryComment = {
   userId: string;
   text: string;
   reports: string[];
+  reportDetails: Array<ReportInput & { userId: string; createdAt: string }>;
+  editedAt?: string;
   createdAt: string;
 };
 
@@ -20,6 +28,8 @@ type MemoryPost = CreatePostInput & {
   likes: string[];
   shares: string[];
   reports: string[];
+  reportDetails: Array<ReportInput & { userId: string; createdAt: string }>;
+  editedAt?: string;
   comments: MemoryComment[];
   createdAt: string;
 };
@@ -27,7 +37,8 @@ type MemoryPost = CreatePostInput & {
 const globalWithFeed = globalThis as typeof globalThis & {
   uniconnectMemoryPosts?: Map<string, MemoryPost>;
 };
-const memoryPosts = globalWithFeed.uniconnectMemoryPosts ?? new Map<string, MemoryPost>();
+const memoryPosts =
+  globalWithFeed.uniconnectMemoryPosts ?? new Map<string, MemoryPost>();
 globalWithFeed.uniconnectMemoryPosts = memoryPosts;
 
 function usesMemoryStore() {
@@ -48,6 +59,7 @@ export async function createPost(authorId: string, input: CreatePostInput) {
       likes: [],
       shares: [],
       reports: [],
+      reportDetails: [],
       comments: [],
       createdAt: new Date().toISOString(),
     };
@@ -103,11 +115,15 @@ export async function listPosts(options: {
       likes: post.likes.map((id) => id.toString()),
       shares: (post.shares ?? []).map((id) => id.toString()),
       reports: (post.reports ?? []).map((id) => id.toString()),
+      reportDetails: [],
+      editedAt: post.editedAt?.toISOString(),
       comments: post.comments.map((comment) => ({
         id: comment._id.toString(),
         userId: comment.userId.toString(),
         text: comment.text,
         reports: (comment.reports ?? []).map((id) => id.toString()),
+        reportDetails: [],
+        editedAt: comment.editedAt?.toISOString(),
         createdAt: comment.createdAt.toISOString(),
       })),
       createdAt: post.createdAt.toISOString(),
@@ -116,7 +132,10 @@ export async function listPosts(options: {
 
   const hasMore = rawPosts.length > options.limit;
   const page = rawPosts.slice(0, options.limit);
-  const userIds = page.flatMap((post) => [post.authorId, ...post.comments.map((comment) => comment.userId)]);
+  const userIds = page.flatMap((post) => [
+    post.authorId,
+    ...post.comments.map((comment) => comment.userId),
+  ]);
   const profiles = await getProfileSummaries(userIds);
   const posts: FeedPost[] = page.map((post) => {
     const author = profiles[post.authorId];
@@ -138,6 +157,8 @@ export async function listPosts(options: {
       reportCount: post.reports.length,
       likedByCurrentUser: post.likes.includes(options.currentUserId),
       sharedByCurrentUser: post.shares.includes(options.currentUserId),
+      isOwnedByCurrentUser: post.authorId === options.currentUserId,
+      editedAt: post.editedAt,
       comments: post.comments.map((comment): FeedComment => ({
         id: comment.id,
         userId: comment.userId,
@@ -145,6 +166,8 @@ export async function listPosts(options: {
         authorPhotoUrl: profiles[comment.userId]?.profilePhotoUrl ?? "",
         text: comment.text,
         reportCount: comment.reports.length,
+        isOwnedByCurrentUser: comment.userId === options.currentUserId,
+        editedAt: comment.editedAt,
         createdAt: comment.createdAt,
       })),
       createdAt: post.createdAt,
@@ -153,7 +176,7 @@ export async function listPosts(options: {
 
   return {
     posts,
-    nextCursor: hasMore ? page.at(-1)?.createdAt ?? null : null,
+    nextCursor: hasMore ? (page.at(-1)?.createdAt ?? null) : null,
   };
 }
 
@@ -178,25 +201,31 @@ export async function toggleShare(postId: string, userId: string) {
   requireValidId(postId);
   if (usesMemoryStore()) {
     const post = requireMemoryPost(postId);
-    post.shares = toggleId(post.shares, userId);
-    return post.shares.includes(userId);
+    if (!post.shares.includes(userId)) post.shares.push(userId);
+    return true;
   }
   await connectToDatabase();
   const post = await Post.findById(postId).select("+shares");
   if (!post) throw new PostNotFoundError();
   const shared = post.shares.some((id) => id.toString() === userId);
-  if (shared) post.shares = post.shares.filter((id) => id.toString() !== userId);
-  else post.shares.push(new Types.ObjectId(userId));
+  if (!shared) post.shares.push(new Types.ObjectId(userId));
   post.shareCount = post.shares.length;
   await post.save();
-  return !shared;
+  return true;
 }
 
 export async function addComment(postId: string, userId: string, text: string) {
   requireValidId(postId);
   if (usesMemoryStore()) {
     const post = requireMemoryPost(postId);
-    const comment: MemoryComment = { id: randomUUID(), userId, text, reports: [], createdAt: new Date().toISOString() };
+    const comment: MemoryComment = {
+      id: randomUUID(),
+      userId,
+      text,
+      reports: [],
+      reportDetails: [],
+      createdAt: new Date().toISOString(),
+    };
     post.comments.push(comment);
     return comment.id;
   }
@@ -204,40 +233,183 @@ export async function addComment(postId: string, userId: string, text: string) {
   const id = new Types.ObjectId();
   const result = await Post.updateOne(
     { _id: postId },
-    { $push: { comments: { _id: id, userId, text, reports: [], reportCount: 0, createdAt: new Date() } } },
+    {
+      $push: {
+        comments: {
+          _id: id,
+          userId,
+          text,
+          reports: [],
+          reportCount: 0,
+          createdAt: new Date(),
+        },
+      },
+    },
   );
   if (!result.matchedCount) throw new PostNotFoundError();
   return id.toString();
 }
 
-export async function reportPost(postId: string, userId: string) {
+export async function updatePost(
+  postId: string,
+  userId: string,
+  input: CreatePostInput,
+) {
   requireValidId(postId);
   if (usesMemoryStore()) {
     const post = requireMemoryPost(postId);
-    if (!post.reports.includes(userId)) post.reports.push(userId);
+    if (post.authorId !== userId) throw new ForbiddenFeedActionError();
+    if (post.type !== input.type) throw new ForbiddenFeedActionError();
+    Object.assign(post, input, { editedAt: new Date().toISOString() });
     return;
   }
   await connectToDatabase();
   const result = await Post.updateOne(
-    { _id: postId, reports: { $ne: userId } },
-    { $addToSet: { reports: userId }, $inc: { reportCount: 1 } },
+    { _id: postId, authorId: userId, type: input.type },
+    { $set: { ...input, editedAt: new Date() } },
+    { runValidators: true },
+  );
+  if (!result.matchedCount) throw new ForbiddenFeedActionError();
+}
+
+export async function deletePost(postId: string, userId: string) {
+  requireValidId(postId);
+  if (usesMemoryStore()) {
+    const post = requireMemoryPost(postId);
+    if (post.authorId !== userId) throw new ForbiddenFeedActionError();
+    memoryPosts.delete(postId);
+    return;
+  }
+  await connectToDatabase();
+  const result = await Post.deleteOne({ _id: postId, authorId: userId });
+  if (!result.deletedCount) throw new ForbiddenFeedActionError();
+}
+
+export async function updateComment(
+  postId: string,
+  commentId: string,
+  userId: string,
+  text: string,
+) {
+  requireValidId(postId);
+  requireValidId(commentId);
+  if (usesMemoryStore()) {
+    const comment = requireMemoryPost(postId).comments.find(
+      (item) => item.id === commentId,
+    );
+    if (!comment || comment.userId !== userId)
+      throw new ForbiddenFeedActionError();
+    comment.text = text;
+    comment.editedAt = new Date().toISOString();
+    return;
+  }
+  await connectToDatabase();
+  const result = await Post.updateOne(
+    { _id: postId, comments: { $elemMatch: { _id: commentId, userId } } },
+    { $set: { "comments.$.text": text, "comments.$.editedAt": new Date() } },
+  );
+  if (!result.matchedCount) throw new ForbiddenFeedActionError();
+}
+
+export async function deleteComment(
+  postId: string,
+  commentId: string,
+  userId: string,
+) {
+  requireValidId(postId);
+  requireValidId(commentId);
+  if (usesMemoryStore()) {
+    const post = requireMemoryPost(postId);
+    const comment = post.comments.find((item) => item.id === commentId);
+    if (!comment || comment.userId !== userId)
+      throw new ForbiddenFeedActionError();
+    post.comments = post.comments.filter((item) => item.id !== commentId);
+    return;
+  }
+  await connectToDatabase();
+  const result = await Post.updateOne(
+    { _id: postId, comments: { $elemMatch: { _id: commentId, userId } } },
+    { $pull: { comments: { _id: commentId } } },
+  );
+  if (!result.matchedCount) throw new ForbiddenFeedActionError();
+}
+
+export async function reportPost(
+  postId: string,
+  userId: string,
+  report: ReportInput,
+) {
+  requireValidId(postId);
+  if (usesMemoryStore()) {
+    const post = requireMemoryPost(postId);
+    if (post.reports.includes(userId)) throw new AlreadyReportedError();
+    if (post.authorId === userId) throw new ForbiddenFeedActionError();
+    post.reports.push(userId);
+    post.reportDetails.push({
+      ...report,
+      userId,
+      createdAt: new Date().toISOString(),
+    });
+    return;
+  }
+  await connectToDatabase();
+  const result = await Post.updateOne(
+    { _id: postId, authorId: { $ne: userId }, reports: { $ne: userId } },
+    {
+      $addToSet: { reports: userId },
+      $push: { reportDetails: { ...report, userId, createdAt: new Date() } },
+      $inc: { reportCount: 1 },
+    },
   );
   if (!result.matchedCount) throw new PostNotFoundError();
 }
 
-export async function reportComment(postId: string, commentId: string, userId: string) {
+export async function reportComment(
+  postId: string,
+  commentId: string,
+  userId: string,
+  report: ReportInput,
+) {
   requireValidId(postId);
   requireValidId(commentId);
   if (usesMemoryStore()) {
-    const comment = requireMemoryPost(postId).comments.find((item) => item.id === commentId);
+    const comment = requireMemoryPost(postId).comments.find(
+      (item) => item.id === commentId,
+    );
     if (!comment) throw new PostNotFoundError();
-    if (!comment.reports.includes(userId)) comment.reports.push(userId);
+    if (comment.reports.includes(userId)) throw new AlreadyReportedError();
+    if (comment.userId === userId) throw new ForbiddenFeedActionError();
+    comment.reports.push(userId);
+    comment.reportDetails.push({
+      ...report,
+      userId,
+      createdAt: new Date().toISOString(),
+    });
     return;
   }
   await connectToDatabase();
   const result = await Post.updateOne(
-    { _id: postId, comments: { $elemMatch: { _id: commentId, reports: { $ne: userId } } } },
-    { $addToSet: { "comments.$.reports": userId }, $inc: { "comments.$.reportCount": 1 } },
+    {
+      _id: postId,
+      comments: {
+        $elemMatch: {
+          _id: commentId,
+          userId: { $ne: userId },
+          reports: { $ne: userId },
+        },
+      },
+    },
+    {
+      $addToSet: { "comments.$.reports": userId },
+      $push: {
+        "comments.$.reportDetails": {
+          ...report,
+          userId,
+          createdAt: new Date(),
+        },
+      },
+      $inc: { "comments.$.reportCount": 1 },
+    },
   );
   if (!result.matchedCount) throw new PostNotFoundError();
 }
@@ -247,11 +419,18 @@ async function countSpotlightsToday(authorId: string) {
   start.setHours(0, 0, 0, 0);
   if (usesMemoryStore()) {
     return [...memoryPosts.values()].filter(
-      (post) => post.authorId === authorId && post.type === "spotlight" && new Date(post.createdAt) >= start,
+      (post) =>
+        post.authorId === authorId &&
+        post.type === "spotlight" &&
+        new Date(post.createdAt) >= start,
     ).length;
   }
   await connectToDatabase();
-  return Post.countDocuments({ authorId, type: "spotlight", createdAt: { $gte: start } });
+  return Post.countDocuments({
+    authorId,
+    type: "spotlight",
+    createdAt: { $gte: start },
+  });
 }
 
 function requireMemoryPost(id: string) {
@@ -266,13 +445,17 @@ function toggleId(ids: string[], id: string) {
 
 function requireValidId(id: string) {
   const valid = usesMemoryStore()
-    ? /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)
+    ? /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+        id,
+      )
     : Types.ObjectId.isValid(id);
   if (!valid) throw new PostNotFoundError();
 }
 
 export class SpotlightLimitError extends Error {}
 export class PostNotFoundError extends Error {}
+export class ForbiddenFeedActionError extends Error {}
+export class AlreadyReportedError extends Error {}
 
 export function canCreateSpotlight(postsToday: number) {
   return postsToday < 2;

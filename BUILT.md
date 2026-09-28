@@ -1,5 +1,16 @@
 # Built
 
+## UX-008 — Navigation, discovery, ownership, sharing, and safety pass (2026-09-28)
+
+- Replaced the desktop icon rail with a labelled navigation sidebar and added direct destinations for Student directory, AI people search, Community feed, and the clearer `Venture showcase` experience.
+- Collapsed every PGP AIAS year/name variant into one directory cohort and made preloaded-profile URLs browser-safe while retaining compatibility with earlier links.
+- Refined the AI search input and redesigned the personal profile presentation with a stronger identity card, profile-strength indicator, clearer skills/interests, and timeline-style experience and education.
+- Added server-authorized editing and deletion for a user's own feed posts and comments. Sharing now uses the device share sheet with a copy-link fallback and records a share once rather than toggling it away.
+- Post and comment reports now require a reason and retain structured report details for future moderation. Users cannot report their own content.
+- Added shared server-side content safety to community posts, venture posts, comments, report reasons, groups, and group messages. It rejects abusive language, executable markup/schemes, shortened or non-HTTPS links, credentialed URLs, local hosts, and IP-address URLs.
+- Group creators can edit or archive their group. Message authors can edit/delete their messages, and group creators can remove messages in their rooms.
+- Verification: 37 tests, strict TypeScript, lint/type validation, and the complete optimized production build pass.
+
 ## PROF-007 — Secure Master CV profile preloading (2026-09-28)
 
 - Added a private `PreloadedProfile` collection keyed by exact official MU email. Staged records are not returned by feed/profile/search queries.

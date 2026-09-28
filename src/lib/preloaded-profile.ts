@@ -1,5 +1,9 @@
 import { connectToDatabase } from "@/lib/db";
-import type { Education, ProfileInput, WorkExperience } from "@/lib/profile-types";
+import type {
+  Education,
+  ProfileInput,
+  WorkExperience,
+} from "@/lib/profile-types";
 import { PreloadedProfile } from "@/models/PreloadedProfile";
 import { Profile } from "@/models/Profile";
 import { User } from "@/models/User";
@@ -24,7 +28,9 @@ export type PreloadedProfileInput = {
   importBatchId: string;
 };
 
-export function toClaimedProfileData(preloaded: PreloadedProfileInput): ProfileInput & {
+export function toClaimedProfileData(
+  preloaded: PreloadedProfileInput,
+): ProfileInput & {
   origin: "masters_cv";
   sourceResumeName: string;
   preloadedNoticeAcknowledgedAt: null;
@@ -52,10 +58,18 @@ export function toClaimedProfileData(preloaded: PreloadedProfileInput): ProfileI
 
 export function toPublishedPreloadedProfile(
   id: string,
-  preloaded: Omit<PreloadedProfileInput, "email" | "sourceResumeName" | "fieldsFilledManually" | "importBatchId" | "linkedinUrl" | "contactLink">,
+  preloaded: Omit<
+    PreloadedProfileInput,
+    | "email"
+    | "sourceResumeName"
+    | "fieldsFilledManually"
+    | "importBatchId"
+    | "linkedinUrl"
+    | "contactLink"
+  >,
 ): SearchableProfile {
   return {
-    userId: `preloaded:${id}`,
+    userId: `preloaded-${id}`,
     profileState: "unclaimed",
     name: preloaded.name,
     profilePhotoUrl: "",
@@ -72,7 +86,10 @@ export function toPublishedPreloadedProfile(
   };
 }
 
-export async function stagePreloadedProfile(input: PreloadedProfileInput, replacePending = false) {
+export async function stagePreloadedProfile(
+  input: PreloadedProfileInput,
+  replacePending = false,
+) {
   return stagePreloadedProfiles([input], replacePending);
 }
 
@@ -86,26 +103,38 @@ export function getProtectedVerifiedEmails(
     .map((user) => user.email);
 }
 
-export async function stagePreloadedProfiles(inputs: PreloadedProfileInput[], replacePending = false) {
+export async function stagePreloadedProfiles(
+  inputs: PreloadedProfileInput[],
+  replacePending = false,
+) {
   if (!inputs.length) throw new Error("The preload batch is empty");
   const emails = inputs.map((input) => input.email);
-  const duplicateEmails = emails.filter((email, index) => emails.indexOf(email) !== index);
+  const duplicateEmails = emails.filter(
+    (email, index) => emails.indexOf(email) !== index,
+  );
   if (duplicateEmails.length) {
-    throw new Error(`Duplicate emails in preload batch: ${[...new Set(duplicateEmails)].join(", ")}`);
+    throw new Error(
+      `Duplicate emails in preload batch: ${[...new Set(duplicateEmails)].join(", ")}`,
+    );
   }
   const database = await connectToDatabase();
   const session = await database.startSession();
   try {
     await session.withTransaction(async () => {
-      const verifiedUsers = await User.find({ email: { $in: emails }, isEmailVerified: true })
+      const verifiedUsers = await User.find({
+        email: { $in: emails },
+        isEmailVerified: true,
+      })
         .select("email isProfileComplete")
         .session(session)
         .lean();
       const verifiedProfiles = verifiedUsers.length
-        ? await Profile.find({ userId: { $in: verifiedUsers.map((user) => user._id) } })
-          .select("userId")
-          .session(session)
-          .lean()
+        ? await Profile.find({
+            userId: { $in: verifiedUsers.map((user) => user._id) },
+          })
+            .select("userId")
+            .session(session)
+            .lean()
         : [];
       const protectedEmails = getProtectedVerifiedEmails(
         verifiedUsers.map((user) => ({
@@ -116,26 +145,39 @@ export async function stagePreloadedProfiles(inputs: PreloadedProfileInput[], re
         verifiedProfiles.map((profile) => profile.userId),
       );
       if (protectedEmails.length) {
-        throw new Error(`Complete profiles already exist for: ${protectedEmails.join(", ")}`);
+        throw new Error(
+          `Complete profiles already exist for: ${protectedEmails.join(", ")}`,
+        );
       }
 
       const existing = await PreloadedProfile.find({ email: { $in: emails } })
         .select("email status")
         .session(session)
         .lean();
-      const claimed = existing.filter((profile) => profile.status !== "pending");
+      const claimed = existing.filter(
+        (profile) => profile.status !== "pending",
+      );
       if (claimed.length) {
-        throw new Error(`Profiles are already claimed or conflicted for: ${claimed.map((profile) => profile.email).join(", ")}`);
+        throw new Error(
+          `Profiles are already claimed or conflicted for: ${claimed.map((profile) => profile.email).join(", ")}`,
+        );
       }
       if (existing.length && !replacePending) {
-        throw new Error(`Staged profiles already exist for: ${existing.map((profile) => profile.email).join(", ")}. Use --replace-pending to replace them.`);
+        throw new Error(
+          `Staged profiles already exist for: ${existing.map((profile) => profile.email).join(", ")}. Use --replace-pending to replace them.`,
+        );
       }
 
       for (const input of inputs) {
         await PreloadedProfile.findOneAndUpdate(
           { email: input.email },
           {
-            $set: { ...input, status: "pending", claimedUserId: null, claimedAt: null },
+            $set: {
+              ...input,
+              status: "pending",
+              claimedUserId: null,
+              claimedAt: null,
+            },
           },
           { upsert: true, runValidators: true, session },
         );
@@ -154,17 +196,28 @@ export async function claimPreloadedProfile(userId: string, email: string) {
 
   try {
     await session.withTransaction(async () => {
-      const preloaded = await PreloadedProfile.findOne({ email, status: "pending" })
+      const preloaded = await PreloadedProfile.findOne({
+        email,
+        status: "pending",
+      })
         .select("+resumeEmbedding")
         .session(session)
         .lean();
       if (!preloaded) return;
 
-      const existingProfile = await Profile.findOne({ userId }).session(session).lean();
+      const existingProfile = await Profile.findOne({ userId })
+        .session(session)
+        .lean();
       if (existingProfile) {
         await PreloadedProfile.updateOne(
           { _id: preloaded._id, status: "pending" },
-          { $set: { status: "conflict", claimedUserId: userId, claimedAt: new Date() } },
+          {
+            $set: {
+              status: "conflict",
+              claimedUserId: userId,
+              claimedAt: new Date(),
+            },
+          },
           { session },
         );
         return;
@@ -195,7 +248,13 @@ export async function claimPreloadedProfile(userId: string, email: string) {
       );
       await PreloadedProfile.updateOne(
         { _id: preloaded._id, status: "pending" },
-        { $set: { status: "claimed", claimedUserId: userId, claimedAt: new Date() } },
+        {
+          $set: {
+            status: "claimed",
+            claimedUserId: userId,
+            claimedAt: new Date(),
+          },
+        },
         { session },
       );
       claimed = true;

@@ -15,7 +15,8 @@ const globalWithProfiles = globalThis as typeof globalThis & {
 };
 
 const memoryProfiles =
-  globalWithProfiles.uniconnectMemoryProfiles ?? new Map<string, StoredProfile>();
+  globalWithProfiles.uniconnectMemoryProfiles ??
+  new Map<string, StoredProfile>();
 globalWithProfiles.uniconnectMemoryProfiles = memoryProfiles;
 
 function usesMemoryStore() {
@@ -32,7 +33,8 @@ export async function saveProfile(userId: string, input: ProfileInput) {
       userId,
       origin: existing?.origin ?? "self",
       sourceResumeName: existing?.sourceResumeName ?? "",
-      preloadedNoticeAcknowledgedAt: existing?.preloadedNoticeAcknowledgedAt ?? null,
+      preloadedNoticeAcknowledgedAt:
+        existing?.preloadedNoticeAcknowledgedAt ?? null,
       createdAt: existing?.createdAt ?? now,
       updatedAt: now,
     };
@@ -46,7 +48,9 @@ export async function saveProfile(userId: string, input: ProfileInput) {
     { userId },
     { $set: input },
     { new: true, upsert: true, runValidators: true },
-  ).select("+sourceResumeName").lean();
+  )
+    .select("+sourceResumeName")
+    .lean();
   await User.updateOne({ _id: userId }, { $set: { isProfileComplete: true } });
 
   return {
@@ -55,13 +59,16 @@ export async function saveProfile(userId: string, input: ProfileInput) {
     userId,
     origin: profile.origin,
     sourceResumeName: profile.sourceResumeName,
-    preloadedNoticeAcknowledgedAt: profile.preloadedNoticeAcknowledgedAt?.toISOString() ?? null,
+    preloadedNoticeAcknowledgedAt:
+      profile.preloadedNoticeAcknowledgedAt?.toISOString() ?? null,
     createdAt: profile.createdAt.toISOString(),
     updatedAt: profile.updatedAt.toISOString(),
   } satisfies StoredProfile;
 }
 
-export async function getProfileByUserId(userId: string): Promise<StoredProfile | null> {
+export async function getProfileByUserId(
+  userId: string,
+): Promise<StoredProfile | null> {
   if (usesMemoryStore()) return memoryProfiles.get(userId) ?? null;
 
   await connectToDatabase();
@@ -89,7 +96,8 @@ export async function getProfileByUserId(userId: string): Promise<StoredProfile 
     resumeEmbedding: profile.resumeEmbedding,
     origin: profile.origin,
     sourceResumeName: profile.sourceResumeName,
-    preloadedNoticeAcknowledgedAt: profile.preloadedNoticeAcknowledgedAt?.toISOString() ?? null,
+    preloadedNoticeAcknowledgedAt:
+      profile.preloadedNoticeAcknowledgedAt?.toISOString() ?? null,
     createdAt: profile.createdAt.toISOString(),
     updatedAt: profile.updatedAt.toISOString(),
   };
@@ -99,7 +107,8 @@ export async function acknowledgePreloadedNotice(userId: string) {
   const acknowledgedAt = new Date().toISOString();
   if (usesMemoryStore()) {
     const profile = memoryProfiles.get(userId);
-    if (profile?.origin === "masters_cv") profile.preloadedNoticeAcknowledgedAt = acknowledgedAt;
+    if (profile?.origin === "masters_cv")
+      profile.preloadedNoticeAcknowledgedAt = acknowledgedAt;
     return;
   }
 
@@ -138,16 +147,19 @@ export async function getProfileSummaries(userIds: string[]) {
   const profiles = await Profile.find({ userId: { $in: ids } })
     .select("userId name profilePhotoUrl cohort")
     .lean();
-  return profiles.reduce<Record<string, ProfileSummary>>((summaries, profile) => {
-    const id = profile.userId.toString();
-    summaries[id] = {
-      userId: id,
-      name: profile.name,
-      profilePhotoUrl: profile.profilePhotoUrl,
-      cohort: profile.cohort,
-    };
-    return summaries;
-  }, {});
+  return profiles.reduce<Record<string, ProfileSummary>>(
+    (summaries, profile) => {
+      const id = profile.userId.toString();
+      summaries[id] = {
+        userId: id,
+        name: profile.name,
+        profilePhotoUrl: profile.profilePhotoUrl,
+        cohort: profile.cohort,
+      };
+      return summaries;
+    },
+    {},
+  );
 }
 
 export async function getSearchableProfiles(
@@ -170,7 +182,9 @@ export async function getSearchableProfiles(
     .select("_id")
     .limit(limit)
     .lean();
-  const profiles = await Profile.find({ userId: { $in: eligibleUsers.map((user) => user._id) } })
+  const profiles = await Profile.find({
+    userId: { $in: eligibleUsers.map((user) => user._id) },
+  })
     .select("+resumeEmbedding")
     .limit(limit)
     .lean();
@@ -185,16 +199,23 @@ export async function getSearchableProfiles(
   );
 }
 
-export async function getDirectoryProfiles(limit = 1000): Promise<SearchableProfile[]> {
+export async function getDirectoryProfiles(
+  limit = 1000,
+): Promise<SearchableProfile[]> {
   if (usesMemoryStore()) {
-    return [...memoryProfiles.values()].slice(0, limit).map(toSearchableProfile);
+    return [...memoryProfiles.values()]
+      .slice(0, limit)
+      .map(toSearchableProfile);
   }
 
   await connectToDatabase();
   const eligibleUsers = await User.find({
     isEmailVerified: true,
     isProfileComplete: true,
-  }).select("_id").limit(limit).lean();
+  })
+    .select("_id")
+    .limit(limit)
+    .lean();
   const [profiles, preloadedProfiles] = await Promise.all([
     Profile.find({ userId: { $in: eligibleUsers.map((user) => user._id) } })
       .select("+resumeEmbedding")
@@ -202,13 +223,15 @@ export async function getDirectoryProfiles(limit = 1000): Promise<SearchableProf
       .lean(),
     getPublishedPreloadedProfiles(limit),
   ]);
-  const claimedProfiles = profiles.map((profile) => toSearchableProfile({
-    ...profile,
-    id: profile._id.toString(),
-    userId: profile.userId.toString(),
-    createdAt: profile.createdAt.toISOString(),
-    updatedAt: profile.updatedAt.toISOString(),
-  }));
+  const claimedProfiles = profiles.map((profile) =>
+    toSearchableProfile({
+      ...profile,
+      id: profile._id.toString(),
+      userId: profile.userId.toString(),
+      createdAt: profile.createdAt.toISOString(),
+      updatedAt: profile.updatedAt.toISOString(),
+    }),
+  );
   return [...claimedProfiles, ...preloadedProfiles].slice(0, limit);
 }
 
@@ -263,8 +286,8 @@ export async function getConnectionProfile(userId: string) {
     const profile = memoryProfiles.get(userId);
     return profile ? toSearchableProfile(profile) : null;
   }
-  if (userId.startsWith("preloaded:")) {
-    const preloadedId = userId.slice("preloaded:".length);
+  if (userId.startsWith("preloaded-") || userId.startsWith("preloaded:")) {
+    const preloadedId = userId.replace(/^preloaded[:-]/, "");
     if (!Types.ObjectId.isValid(preloadedId)) return null;
     await connectToDatabase();
     return (await getPublishedPreloadedProfiles(1, preloadedId))[0] ?? null;
@@ -277,7 +300,9 @@ export async function getConnectionProfile(userId: string) {
     isProfileComplete: true,
   });
   if (!eligibleUser) return null;
-  const profile = await Profile.findOne({ userId }).select("+resumeEmbedding").lean();
+  const profile = await Profile.findOne({ userId })
+    .select("+resumeEmbedding")
+    .lean();
   if (!profile) return null;
   return toSearchableProfile({
     ...profile,
@@ -295,7 +320,9 @@ type SearchableProfileSource = Omit<SearchableProfile, "vectorScore"> & {
   vectorScore?: number;
 };
 
-function toSearchableProfile(profile: SearchableProfileSource): SearchableProfile {
+function toSearchableProfile(
+  profile: SearchableProfileSource,
+): SearchableProfile {
   return {
     userId: profile.userId,
     profileState: profile.profileState ?? "claimed",
@@ -315,22 +342,31 @@ function toSearchableProfile(profile: SearchableProfileSource): SearchableProfil
   };
 }
 
-async function getPublishedPreloadedProfiles(limit: number, id?: string): Promise<SearchableProfile[]> {
-  const query: { status: "pending"; _id?: Types.ObjectId } = { status: "pending" };
+async function getPublishedPreloadedProfiles(
+  limit: number,
+  id?: string,
+): Promise<SearchableProfile[]> {
+  const query: { status: "pending"; _id?: Types.ObjectId } = {
+    status: "pending",
+  };
   if (id) query._id = new Types.ObjectId(id);
   const profiles = await PreloadedProfile.find(query)
-    .select("name cohort skills interests workExperience education currentProject lookingFor +resumeEmbedding")
+    .select(
+      "name cohort skills interests workExperience education currentProject lookingFor +resumeEmbedding",
+    )
     .limit(limit)
     .lean();
-  return profiles.map((profile) => toPublishedPreloadedProfile(profile._id.toString(), {
-    name: profile.name,
-    cohort: profile.cohort,
-    skills: profile.skills,
-    interests: profile.interests ?? [],
-    workExperience: profile.workExperience,
-    education: profile.education,
-    currentProject: profile.currentProject,
-    lookingFor: profile.lookingFor,
-    resumeEmbedding: profile.resumeEmbedding,
-  }));
+  return profiles.map((profile) =>
+    toPublishedPreloadedProfile(profile._id.toString(), {
+      name: profile.name,
+      cohort: profile.cohort,
+      skills: profile.skills,
+      interests: profile.interests ?? [],
+      workExperience: profile.workExperience,
+      education: profile.education,
+      currentProject: profile.currentProject,
+      lookingFor: profile.lookingFor,
+      resumeEmbedding: profile.resumeEmbedding,
+    }),
+  );
 }

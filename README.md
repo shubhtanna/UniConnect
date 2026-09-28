@@ -4,9 +4,11 @@ UniConnect is a verified student network for Masters' Union. It helps students d
 
 ## Project status
 
-Latest release (2026-09-28): the discovery expansion adds a 40-person filterable class directory, explicit interest tags, privacy-aware “Who’s looking for you” insights, and focused brainstorm groups. The directory combines claimed profiles with clearly labelled unclaimed Master CV profiles; unclaimed entries never expose email, contact links, LinkedIn URLs, resume files, filenames, or claim identifiers.
+Latest release (2026-09-28): the usability and safety pass adds a fully labelled navigation sidebar, direct directory/AI-search/community/venture destinations, one normalized PGP AIAS cohort, browser-safe preloaded profile links, an improved profile view, real device sharing with copy fallback, owner edit/delete controls for posts/comments/groups/messages, reasoned reports, and shared server-side moderation for abusive content and unsafe links.
 
-This release is deployed at https://uniconnect-teal.vercel.app. Database deployment `dpl_HTArqQ17MsAv4VgYZUFtwUw2NHk6` explicitly selects the `uniconnect` database; existing UniConnect records were copied and verified there on 2026-09-28 while the former `test` records were retained temporarily as a rollback copy. The 31-test suite, TypeScript, lint, local/remote production builds, database/vector indexes, and production service health were verified. Authenticated visual interaction checks with consenting test accounts remain pending.
+The earlier discovery expansion provides a 40-person filterable class directory, explicit interest tags, privacy-aware “Who’s looking for you” insights, and focused brainstorm groups. The directory combines claimed profiles with clearly labelled unclaimed Master CV profiles; unclaimed entries never expose email, contact links, LinkedIn URLs, resume files, filenames, or claim identifiers.
+
+The current stable deployment is https://uniconnect-teal.vercel.app. The database explicitly selects `uniconnect`; existing UniConnect records were copied and verified there on 2026-09-28 while the former `test` records were retained temporarily as a rollback copy. The 37-test suite, TypeScript, lint/type validation, production build, database/vector indexes, and production service health were verified. Authenticated visual interaction checks with consenting test accounts remain pending.
 
 ### Master CV profile preloading
 
@@ -48,8 +50,9 @@ These three documents are maintained together. A feature is removed from `PENDIN
 - Interest tags and reverse “Who’s looking for you” matches
 - Named or anonymous profile-view preferences and 30-day viewer insights
 - Open or invite-only brainstorm groups with persistent discussions
-- Community and Business Spotlight feeds
-- Like, comment, share, and report interactions
+- Community and Venture showcase feeds
+- Like and comment interactions, native/copy-link sharing, owner edit/delete controls, and reason-required reports
+- Server-side abusive-language and unsafe-link guardrails across feeds and groups
 - Mobile-responsive interface
 
 ## Stack

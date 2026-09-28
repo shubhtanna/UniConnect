@@ -17,7 +17,9 @@ function preloaded(): PreloadedProfileInput {
     name: "Class Mate",
     skills: ["Product", "Python"],
     workExperience: [],
-    education: [{ institution: "Masters' Union", degree: "PGP AIAS", year: "2026-27" }],
+    education: [
+      { institution: "Masters' Union", degree: "PGP AIAS", year: "2026-27" },
+    ],
     currentProject: "Exploring consumer AI",
     lookingFor: "Like-minded people",
     linkedinUrl: "",
@@ -52,7 +54,7 @@ test("published unclaimed profiles expose professional fields but no private cla
     resumeEmbedding: source.resumeEmbedding,
   });
 
-  assert.equal(published.userId, "preloaded:record-id");
+  assert.equal(published.userId, "preloaded-record-id");
   assert.equal(published.profileState, "unclaimed");
   assert.equal(published.linkedinUrl, "");
   assert.equal(published.contactLink, "");
@@ -70,19 +72,41 @@ test("Master CV edits may omit uploads but normal self-onboarding still requires
 
 test("a claimed profile without an embedding remains discoverable by explicit skills", () => {
   const claimed = toClaimedProfileData(preloaded());
-  const ranked = rankProfiles("Python", [1, 0], [{
-    userId: "claimed-user", ...claimed,
-  }]);
+  const ranked = rankProfiles(
+    "Python",
+    [1, 0],
+    [
+      {
+        userId: "claimed-user",
+        ...claimed,
+      },
+    ],
+  );
   assert.equal(ranked[0]?.userId, "claimed-user");
   assert.ok((ranked[0]?.vectorScore ?? 0) > 0);
 });
 
 test("staging protects completed verified accounts but permits verified users without profiles", () => {
-  const protectedEmails = getProtectedVerifiedEmails([
-    { _id: "incomplete", email: "incomplete@mastersunion.org", isProfileComplete: false },
-    { _id: "complete", email: "complete@mastersunion.org", isProfileComplete: true },
-    { _id: "has-profile", email: "profile@mastersunion.org", isProfileComplete: false },
-  ], ["has-profile"]);
+  const protectedEmails = getProtectedVerifiedEmails(
+    [
+      {
+        _id: "incomplete",
+        email: "incomplete@mastersunion.org",
+        isProfileComplete: false,
+      },
+      {
+        _id: "complete",
+        email: "complete@mastersunion.org",
+        isProfileComplete: true,
+      },
+      {
+        _id: "has-profile",
+        email: "profile@mastersunion.org",
+        isProfileComplete: false,
+      },
+    ],
+    ["has-profile"],
+  );
 
   assert.deepEqual(protectedEmails, [
     "complete@mastersunion.org",

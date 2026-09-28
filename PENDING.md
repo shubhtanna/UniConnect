@@ -6,6 +6,10 @@ Last reviewed: 2026-09-28
 
 ## Latest fix rollout
 
+- [ ] **UX-008-LIVE — Authenticated production interaction check**
+  - Verify the labelled desktop/mobile navigation, combined PGP AIAS filter, preloaded profile routes, profile layout, AI search focus state, native share/copy fallback, post/comment ownership controls, reasoned reporting, moderation errors, and group lifecycle with consenting test accounts.
+  - Confirm the production deployment and stable alias after this release is published.
+
 - [ ] **PROF-006-UI — Visually verify deployed field-specific validation**
   - Published to the existing Vercel production project on 2026-09-28; deployment `dpl_ER3zKiWbdqess5x5StzgV6zqrh9U` is Ready and the stable alias was verified.
   - Local implementation, 18 unit tests, typecheck, lint, production build, and isolated Phase 2 API smoke test pass. Live homepage/login/health return HTTP 200; anonymous setup redirects to login.
@@ -43,8 +47,8 @@ Deployment `dpl_BtJWbA45dfHkKxF6zotzmLBZkMht` published the four-feature expansi
   - Confirm anonymous views never disclose identity and future mode changes do not rewrite earlier view records.
   - Do not use classmates’ accounts or emails for testing without permission.
 
-- [ ] **DISC-006 — Group moderation and lifecycle**
-  - Add message/group reporting, creator moderation, member removal, group editing, archiving, and invite management before broad cohort rollout.
+- [ ] **DISC-006 — Complete group moderation and membership lifecycle**
+  - Group editing/archiving and creator message removal are complete. Add group/message reporting, member removal, and invite management before broad cohort rollout.
   - Add notifications only after the owner chooses an approved delivery channel; do not turn groups into another noisy feed.
   - Consider real-time updates only if pilot use shows that refresh-based chronological discussion is insufficient.
 
