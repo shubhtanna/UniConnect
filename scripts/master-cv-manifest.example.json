@@ -1,0 +1,19 @@
+{
+  "batchId": "aias-2026-master-cvs-v1",
+  "defaultCohort": "PGP AIAS 2026-27",
+  "defaultLookingFor": "Open to meeting like-minded people and exploring opportunities at MU",
+  "profiles": [
+    {
+      "email": "student@mastersunion.org",
+      "resume": "./resumes/student.pdf",
+      "name": "Optional name override",
+      "cohort": "PGP AIAS 2026-27",
+      "lookingFor": "Optional personal override",
+      "linkedinUrl": "",
+      "skills": ["Optional", "Reviewed", "Skills"],
+      "workExperience": [],
+      "education": [],
+      "currentProject": "Optional reviewed project summary"
+    }
+  ]
+}

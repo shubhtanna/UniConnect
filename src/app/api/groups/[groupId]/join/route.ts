@@ -1,0 +1,2 @@
+import { NextResponse } from "next/server"; import { getCompleteApiUser } from "@/lib/api-auth"; import { joinGroup } from "@/lib/group-store";
+export async function POST(_:Request,{params}:{params:Promise<{groupId:string}>}){const auth=await getCompleteApiUser();if(!auth.user)return auth.response;const {groupId}=await params;return await joinGroup(auth.user.id,groupId)?NextResponse.json({ok:true}):NextResponse.json({error:"Group is unavailable or full"},{status:409});}

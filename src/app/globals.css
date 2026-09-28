@@ -1,0 +1,104 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: #0a0a0a;
+  color: #f5f5f4;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: #2dd4bf;
+  color: #0a0a0a;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button,
+a,
+input,
+textarea,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+
+:focus-visible {
+  outline: 3px solid rgba(45, 212, 191, 0.4);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@layer components {
+  .eyebrow {
+    @apply text-xs font-semibold uppercase tracking-[0.2em] text-teal;
+  }
+
+  .primary-button {
+    @apply inline-flex min-h-12 items-center justify-center rounded-full px-6 py-3 text-sm font-bold text-app shadow-glow transition hover:-translate-y-0.5 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0;
+    background-image: linear-gradient(100deg, #2dd4bf, #fbbf24);
+  }
+
+  .secondary-button {
+    @apply relative inline-flex min-h-12 items-center justify-center rounded-full border border-teal/60 bg-transparent px-6 py-3 text-sm font-semibold text-ink transition hover:border-amber hover:bg-white/5;
+  }
+
+  .field-label {
+    @apply mb-2 block text-sm font-semibold text-ink;
+  }
+
+  .text-field {
+    @apply min-h-12 w-full rounded-xl border border-line bg-[#101010] px-4 py-3 text-base text-ink shadow-sm transition placeholder:text-muted/50 hover:border-white/20 focus:border-teal focus:outline-none focus:ring-4 focus:ring-teal/10;
+  }
+
+  .panel {
+    @apply relative overflow-hidden rounded-2xl border border-line bg-surface;
+  }
+
+  .panel::before {
+    content: "";
+    @apply absolute inset-x-0 top-0 h-px;
+    background-image: linear-gradient(90deg, #2dd4bf, #fbbf24);
+  }
+
+  .gradient-text {
+    background-image: linear-gradient(100deg, #2dd4bf, #fbbf24);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .grid-texture {
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+    background-size: 34px 34px;
+  }
+}
