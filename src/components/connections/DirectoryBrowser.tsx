@@ -61,7 +61,7 @@ export function DirectoryBrowser() {
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="eyebrow">Student directory</p>
-            <h2 id="directory-heading" className="mt-2 text-2xl font-semibold">Explore verified profiles</h2>
+            <h2 id="directory-heading" className="mt-2 text-2xl font-semibold">Explore all class profiles</h2>
           </div>
           <p className="text-sm text-muted" aria-live="polite">
             {loading && !result ? "Loading students…" : `${result?.total ?? 0} student${result?.total === 1 ? "" : "s"}`}
@@ -138,6 +138,7 @@ function DirectoryCard({ profile }: { profile: DirectoryProfile }) {
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="text-lg font-semibold">{profile.name}</h3>
             <span className="rounded-full border border-line px-2.5 py-1 text-xs text-muted">{profile.cohort}</span>
+            {profile.profileState === "unclaimed" && <span className="rounded-full border border-amber/35 bg-amber/10 px-2.5 py-1 text-xs font-semibold text-amber">Unclaimed</span>}
           </div>
           <p className="mt-3 line-clamp-2 text-sm leading-6 text-white/70"><span className="font-semibold text-ink">Looking for:</span> {profile.lookingFor}</p>
         </div>

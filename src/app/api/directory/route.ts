@@ -33,7 +33,7 @@ export async function GET(request: Request) {
         { status: 400 },
       );
     }
-    return NextResponse.json(await browseDirectory(auth.user.id, parsed.data));
+    return NextResponse.json(await browseDirectory(parsed.data));
   } catch (error) {
     logServerError("directory_browse_failed", error);
     return NextResponse.json(

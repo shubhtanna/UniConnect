@@ -580,3 +580,11 @@ The Atlas connection string had no database path, so Mongoose used MongoDB's def
 - The Atlas `profile_embedding` index in `uniconnect` is Ready and queryable.
 - Deployment `dpl_HTArqQ17MsAv4VgYZUFtwUw2NHk6` is Ready at the stable alias. Production health is connected, and a new live profile-view record appeared in `uniconnect` while the old `test` counts remained unchanged, confirming the runtime switch.
 - The old UniConnect collections in `test` remain temporarily as a rollback copy. Do not drop the entire `test` database because it also contains unrelated Dealspouch collections. Cleanup is recorded in `PENDING.md` and requires deliberate approval after the retention window.
+
+## 21. All 40 class profiles published in the directory
+
+The owner explicitly authorized showing all imported profiles on 2026-09-28. The authenticated directory now combines 5 claimed profiles and 35 pending Master CV profiles for a verified total of 40, including the signed-in student's own profile. Pending entries use opaque `preloaded:<record-id>` routes and are visibly labelled “Unclaimed.”
+
+Publication is intentionally bounded: unclaimed entries expose professional profile fields but never email, contact links, LinkedIn URLs, original resumes, resume URLs/text, source filenames, import batch IDs, or claim keys. They do not generate viewer records and are not included in AI matching before claim. When the exact MU email completes OTP verification, the preload status changes from pending to claimed, the unclaimed directory entry disappears, and the normal owned profile appears without duplication.
+
+Verification: 32 tests, TypeScript, lint, and production build pass. A direct query against `uniconnect` returns exactly 40 directory profiles (5 claimed and 35 unclaimed), loads the unclaimed detail route, and confirms the private fields above are absent.

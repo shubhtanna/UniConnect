@@ -1,7 +1,7 @@
 import type { SearchableProfile } from "@/lib/connection-types";
 import type { DirectoryResponse } from "@/lib/directory-types";
 import type { DirectoryQuery } from "@/lib/directory-validation";
-import { getSearchableProfiles } from "@/lib/profile-store";
+import { getDirectoryProfiles } from "@/lib/profile-store";
 
 export const DIRECTORY_PAGE_SIZE = 12;
 
@@ -33,10 +33,9 @@ export function filterDirectoryProfiles(
 }
 
 export async function browseDirectory(
-  excludeUserId: string,
   filters: DirectoryQuery,
 ): Promise<DirectoryResponse> {
-  const allProfiles = await getSearchableProfiles(excludeUserId, 1000);
+  const allProfiles = await getDirectoryProfiles(1000);
   const sorted = [...allProfiles].sort((left, right) => left.name.localeCompare(right.name));
   const filtered = filterDirectoryProfiles(sorted, filters);
   const start = filters.page * DIRECTORY_PAGE_SIZE;
@@ -44,6 +43,7 @@ export async function browseDirectory(
   return {
     profiles: filtered.slice(start, start + DIRECTORY_PAGE_SIZE).map((profile) => ({
       userId: profile.userId,
+      profileState: profile.profileState ?? "claimed",
       name: profile.name,
       profilePhotoUrl: profile.profilePhotoUrl,
       cohort: profile.cohort,

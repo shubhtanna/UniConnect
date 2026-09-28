@@ -2,6 +2,7 @@ import type { Education, WorkExperience } from "@/lib/profile-types";
 
 export type SearchableProfile = {
   userId: string;
+  profileState?: "claimed" | "unclaimed";
   name: string;
   profilePhotoUrl: string;
   cohort: string;

@@ -4,6 +4,7 @@ import { PreloadedProfile } from "@/models/PreloadedProfile";
 import { Profile } from "@/models/Profile";
 import { User } from "@/models/User";
 import { getServerEnv } from "@/lib/env";
+import type { SearchableProfile } from "@/lib/connection-types";
 
 export type PreloadedProfileInput = {
   email: string;
@@ -46,6 +47,28 @@ export function toClaimedProfileData(preloaded: PreloadedProfileInput): ProfileI
     origin: "masters_cv",
     sourceResumeName: preloaded.sourceResumeName,
     preloadedNoticeAcknowledgedAt: null,
+  };
+}
+
+export function toPublishedPreloadedProfile(
+  id: string,
+  preloaded: Omit<PreloadedProfileInput, "email" | "sourceResumeName" | "fieldsFilledManually" | "importBatchId" | "linkedinUrl" | "contactLink">,
+): SearchableProfile {
+  return {
+    userId: `preloaded:${id}`,
+    profileState: "unclaimed",
+    name: preloaded.name,
+    profilePhotoUrl: "",
+    cohort: preloaded.cohort,
+    skills: preloaded.skills,
+    interests: preloaded.interests ?? [],
+    workExperience: preloaded.workExperience,
+    education: preloaded.education,
+    currentProject: preloaded.currentProject,
+    lookingFor: preloaded.lookingFor,
+    linkedinUrl: "",
+    contactLink: "",
+    resumeEmbedding: preloaded.resumeEmbedding,
   };
 }
 

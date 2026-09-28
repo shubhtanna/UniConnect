@@ -374,12 +374,16 @@ Completed: 2026-09-28
 
 - The Connections area opens with a browseable student directory and retains AI search as a separate tab.
 - Students can search and combine batch, exact skill, interest, and looking-for filters, with pagination and clear empty states.
-- Only verified students with complete profiles are returned, and directory requests are authenticated, validated, and rate-limited.
+- The directory returns all 40 class profiles: 5 claimed profiles and 35 clearly labelled unclaimed Master CV profiles. A student can also see their own card.
+- Unclaimed profiles expose only approved professional profile fields inside the authenticated directory; email, contact/LinkedIn links, resume data/files, filenames, and claim identifiers remain hidden.
+- When a student claims a profile, the pending entry disappears and the normal verified editable profile replaces it without duplication.
+- Directory requests are authenticated, validated, and rate-limited. Unclaimed entries do not create profile-view tracking and are not sent through AI matching before claim.
 - Filter options come from the available profile data instead of a hard-coded taxonomy.
 
 Verification:
 
 - Three directory tests cover cross-field keyword matching, combined filters, case handling, and non-mutation.
+- A privacy test verifies an unclaimed published profile contains no email, contact, LinkedIn, resume, filename, or claim data; a live aggregate check returns exactly 40 profiles (5 claimed, 35 unclaimed).
 - Strict TypeScript, lint, and the optimized production build pass.
 
 ### DISC-002 — Profile interest tags

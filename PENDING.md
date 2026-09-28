@@ -39,7 +39,7 @@ Last reviewed: 2026-09-28
 Deployment `dpl_BtJWbA45dfHkKxF6zotzmLBZkMht` published the four-feature expansion to `https://uniconnect-teal.vercel.app` on 2026-09-28. The stable homepage/login return HTTP 200; anonymous directory, insights, and groups requests redirect to login; `/api/health` reports MongoDB, Cloudinary, email, and AI connected.
 
 - [ ] **DISC-005 — Authenticated browser verification**
-  - With consenting test accounts, verify directory filter combinations, interest editing, named/anonymous view behavior, reverse-match explanations, open-group joining, invite-only visibility, and group posting on desktop and mobile.
+  - With consenting test accounts, verify all 40 directory cards, unclaimed badges/details, claim-to-owned-profile replacement, directory filter combinations, interest editing, named/anonymous view behavior, reverse-match explanations, open-group joining, invite-only visibility, and group posting on desktop and mobile.
   - Confirm anonymous views never disclose identity and future mode changes do not rewrite earlier view records.
   - Do not use classmates’ accounts or emails for testing without permission.
 

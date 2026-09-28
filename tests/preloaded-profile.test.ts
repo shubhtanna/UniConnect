@@ -4,6 +4,7 @@ import { preloadedProfileUpdateSchema } from "@/lib/profile-validation";
 import {
   getProtectedVerifiedEmails,
   toClaimedProfileData,
+  toPublishedPreloadedProfile,
   type PreloadedProfileInput,
 } from "@/lib/preloaded-profile";
 import { rankProfiles } from "@/lib/connection-search";
@@ -35,6 +36,29 @@ test("claimed Master CV data creates an editable profile without impersonating v
   assert.equal(claimed.contactLink, "");
   assert.equal(claimed.preloadedNoticeAcknowledgedAt, null);
   assert.equal(preloadedProfileUpdateSchema.safeParse(claimed).success, true);
+});
+
+test("published unclaimed profiles expose professional fields but no private claim or contact data", () => {
+  const source = preloaded();
+  const published = toPublishedPreloadedProfile("record-id", {
+    name: source.name,
+    cohort: source.cohort,
+    skills: source.skills,
+    interests: source.interests,
+    workExperience: source.workExperience,
+    education: source.education,
+    currentProject: source.currentProject,
+    lookingFor: source.lookingFor,
+    resumeEmbedding: source.resumeEmbedding,
+  });
+
+  assert.equal(published.userId, "preloaded:record-id");
+  assert.equal(published.profileState, "unclaimed");
+  assert.equal(published.linkedinUrl, "");
+  assert.equal(published.contactLink, "");
+  assert.equal("email" in published, false);
+  assert.equal("sourceResumeName" in published, false);
+  assert.equal("resumeUrl" in published, false);
 });
 
 test("Master CV edits may omit uploads but normal self-onboarding still requires them", async () => {

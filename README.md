@@ -4,7 +4,7 @@ UniConnect is a verified student network for Masters' Union. It helps students d
 
 ## Project status
 
-Latest release (2026-09-28): the discovery expansion adds a filterable student directory, explicit interest tags, privacy-aware “Who’s looking for you” insights, and focused brainstorm groups. Profile review also provides field-specific validation feedback for skills, education, work entries, and links.
+Latest release (2026-09-28): the discovery expansion adds a 40-person filterable class directory, explicit interest tags, privacy-aware “Who’s looking for you” insights, and focused brainstorm groups. The directory combines claimed profiles with clearly labelled unclaimed Master CV profiles; unclaimed entries never expose email, contact links, LinkedIn URLs, resume files, filenames, or claim identifiers.
 
 This release is deployed at https://uniconnect-teal.vercel.app. Database deployment `dpl_HTArqQ17MsAv4VgYZUFtwUw2NHk6` explicitly selects the `uniconnect` database; existing UniConnect records were copied and verified there on 2026-09-28 while the former `test` records were retained temporarily as a rollback copy. The 31-test suite, TypeScript, lint, local/remote production builds, database/vector indexes, and production service health were verified. Authenticated visual interaction checks with consenting test accounts remain pending.
 

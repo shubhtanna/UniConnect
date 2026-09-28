@@ -14,7 +14,9 @@ export default async function ConnectionProfilePage({
   const viewer = await requireCompleteUser();
   const profile = await getConnectionProfile(userId);
   if (!profile) notFound();
-  await recordProfileView(viewer.id, userId).catch(() => undefined);
+  if (profile.profileState !== "unclaimed") {
+    await recordProfileView(viewer.id, userId).catch(() => undefined);
+  }
 
   return (
     <main className="min-h-screen px-4 pb-28 pt-8 sm:px-8 lg:px-12">
@@ -22,7 +24,11 @@ export default async function ConnectionProfilePage({
         <Link href="/connections" className="text-sm font-semibold text-muted hover:text-teal">
           ← Back to search
         </Link>
-        <p className="mt-3 text-xs text-muted">Profile visits appear in Discovery insights according to your named/anonymous preference.</p>
+        {profile.profileState === "unclaimed" ? (
+          <p className="mt-3 text-xs text-muted">This class profile was prepared from the Masters CV and has not yet been claimed by its owner.</p>
+        ) : (
+          <p className="mt-3 text-xs text-muted">Profile visits appear in Discovery insights according to your named/anonymous preference.</p>
+        )}
         <section className="panel mt-6 p-6 sm:p-9">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
             {profile.profilePhotoUrl ? (
@@ -40,7 +46,7 @@ export default async function ConnectionProfilePage({
               </div>
             )}
             <div className="min-w-0">
-              <p className="eyebrow">Verified MU student</p>
+              <p className="eyebrow">{profile.profileState === "unclaimed" ? "MU class profile · unclaimed" : "Verified MU student"}</p>
               <h1 className="mt-3 text-4xl font-semibold tracking-[-0.04em]">{profile.name}</h1>
               <p className="mt-2 text-muted">{profile.cohort}</p>
               <div className="mt-5 flex flex-wrap gap-3">
@@ -53,6 +59,12 @@ export default async function ConnectionProfilePage({
               </div>
             </div>
           </div>
+
+          {profile.profileState === "unclaimed" && (
+            <div className="mt-7 rounded-2xl border border-amber/25 bg-amber/5 p-4 text-sm leading-6 text-white/75">
+              This profile is visible to verified UniConnect students using approved structured Masters CV information. Contact details and the original resume remain private. The owner can claim and edit it after signing in with their MU email.
+            </div>
+          )}
 
           <div className="mt-9 grid gap-7 border-t border-line pt-8 lg:grid-cols-2">
             <ProfileSection title="Skills"><div className="flex flex-wrap gap-2">{profile.skills.map((skill) => <span key={skill} className="rounded-full border border-teal/30 bg-teal/5 px-3 py-1.5 text-sm text-teal">{skill}</span>)}</div></ProfileSection>

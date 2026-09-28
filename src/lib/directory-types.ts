@@ -1,5 +1,6 @@
 export type DirectoryProfile = {
   userId: string;
+  profileState: "claimed" | "unclaimed";
   name: string;
   profilePhotoUrl: string;
   cohort: string;
