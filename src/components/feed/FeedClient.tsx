@@ -6,6 +6,7 @@ import {
   FormEvent,
   useCallback,
   useEffect,
+  useRef,
   useState,
 } from "react";
 import type { FeedPost, FeedType } from "@/lib/feed-types";
@@ -24,16 +25,21 @@ async function requestJson(url: string, options?: RequestInit) {
 export function FeedClient({
   currentUser,
   initialType = "community",
+  initialPosts = [],
+  initialCursor = null,
 }: {
   currentUser: CurrentUser;
   initialType?: FeedType;
+  initialPosts?: FeedPost[];
+  initialCursor?: string | null;
 }) {
   const [activeType, setActiveType] = useState<FeedType>(initialType);
-  const [posts, setPosts] = useState<FeedPost[]>([]);
-  const [cursor, setCursor] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [posts, setPosts] = useState<FeedPost[]>(initialPosts);
+  const [cursor, setCursor] = useState<string | null>(initialCursor);
+  const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState("");
+  const skipInitialRequest = useRef(true);
 
   const loadPosts = useCallback(async (type: FeedType, nextCursor?: string) => {
     const query = new URLSearchParams({ type });
@@ -49,6 +55,10 @@ export function FeedClient({
   }, []);
 
   useEffect(() => {
+    if (skipInitialRequest.current && activeType === initialType) {
+      skipInitialRequest.current = false;
+      return;
+    }
     setLoading(true);
     setError("");
     loadPosts(activeType)
@@ -60,7 +70,7 @@ export function FeedClient({
         ),
       )
       .finally(() => setLoading(false));
-  }, [activeType, loadPosts]);
+  }, [activeType, initialType, loadPosts]);
 
   async function refresh() {
     await loadPosts(activeType);

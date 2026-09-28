@@ -39,7 +39,9 @@ function usesMemoryStore() {
   return getServerEnv().DATABASE_MODE === "memory";
 }
 
-export async function getAuthChallenge(email: string): Promise<AuthChallenge | null> {
+export async function getAuthChallenge(
+  email: string,
+): Promise<AuthChallenge | null> {
   if (usesMemoryStore()) return memoryStore.challenges.get(email) ?? null;
 
   await connectToDatabase();
@@ -92,7 +94,9 @@ export async function deleteAuthChallenge(email: string) {
 
 export async function upsertVerifiedUser(email: string): Promise<AuthUser> {
   if (usesMemoryStore()) {
-    const existing = [...memoryStore.users.values()].find((user) => user.email === email);
+    const existing = [...memoryStore.users.values()].find(
+      (user) => user.email === email,
+    );
     if (existing) {
       existing.isEmailVerified = true;
       return existing;
@@ -111,7 +115,10 @@ export async function upsertVerifiedUser(email: string): Promise<AuthUser> {
   await connectToDatabase();
   const user = await User.findOneAndUpdate(
     { email },
-    { $set: { isEmailVerified: true }, $setOnInsert: { isProfileComplete: false } },
+    {
+      $set: { isEmailVerified: true },
+      $setOnInsert: { isProfileComplete: false },
+    },
     { new: true, upsert: true, runValidators: true },
   );
 
@@ -127,7 +134,9 @@ export async function getAuthUserById(id: string): Promise<AuthUser | null> {
   if (usesMemoryStore()) return memoryStore.users.get(id) ?? null;
 
   await connectToDatabase();
-  const user = await User.findById(id).lean();
+  const user = await User.findById(id)
+    .select("email isEmailVerified isProfileComplete")
+    .lean();
   if (!user) return null;
 
   return {

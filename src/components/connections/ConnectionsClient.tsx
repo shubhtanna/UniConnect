@@ -5,6 +5,7 @@ import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { ConnectionSearchResponse } from "@/lib/connection-types";
+import type { DirectoryResponse } from "@/lib/directory-types";
 import { DirectoryBrowser } from "@/components/connections/DirectoryBrowser";
 
 const suggestions = [
@@ -13,11 +14,17 @@ const suggestions = [
   "Find a technical cofounder who knows AI and Next.js",
 ];
 
-export function ConnectionsClient() {
+export function ConnectionsClient({
+  initialMode = "browse",
+  initialDirectory = null,
+}: {
+  initialMode?: "browse" | "search";
+  initialDirectory?: DirectoryResponse | null;
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const requestedMode =
-    searchParams.get("mode") === "search" ? "search" : "browse";
+    searchParams.get("mode") === "search" ? "search" : initialMode;
   const [mode, setMode] = useState<"browse" | "search">(requestedMode);
   const [query, setQuery] = useState("");
   const [result, setResult] = useState<ConnectionSearchResponse | null>(null);
@@ -101,7 +108,7 @@ export function ConnectionsClient() {
         </div>
 
         {mode === "browse" ? (
-          <DirectoryBrowser />
+          <DirectoryBrowser initialResult={initialDirectory} />
         ) : (
           <>
             <form

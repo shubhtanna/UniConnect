@@ -1,8 +1,9 @@
 import { redirect } from "next/navigation";
+import { cache } from "react";
 import { getAuthUserById } from "@/lib/auth-store";
 import { getSession } from "@/lib/session";
 
-export async function getCurrentUser() {
+export const getCurrentUser = cache(async function getCurrentUser() {
   const session = await getSession();
   if (!session) return null;
 
@@ -13,7 +14,7 @@ export async function getCurrentUser() {
   }
 
   return user;
-}
+});
 
 export async function requireVerifiedUser() {
   const user = await getCurrentUser();

@@ -2,8 +2,14 @@ import type { SearchableProfile } from "@/lib/connection-types";
 import type { DirectoryResponse } from "@/lib/directory-types";
 import type { DirectoryQuery } from "@/lib/directory-validation";
 import { getDirectoryProfiles } from "@/lib/profile-store";
+import { unstable_cache } from "next/cache";
 
 export const DIRECTORY_PAGE_SIZE = 12;
+const getCachedDirectoryProfiles = unstable_cache(
+  () => getDirectoryProfiles(1000),
+  ["directory-profiles"],
+  { revalidate: 30 },
+);
 
 export function filterDirectoryProfiles(
   profiles: SearchableProfile[],
@@ -44,7 +50,7 @@ export function filterDirectoryProfiles(
 export async function browseDirectory(
   filters: DirectoryQuery,
 ): Promise<DirectoryResponse> {
-  const allProfiles = await getDirectoryProfiles(1000);
+  const allProfiles = await getCachedDirectoryProfiles();
   const sorted = [...allProfiles].sort((left, right) =>
     left.name.localeCompare(right.name),
   );

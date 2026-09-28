@@ -1,5 +1,14 @@
 # Built
 
+## PERF-009 — Protected navigation latency reduction (2026-09-28)
+
+- Deduplicated authenticated-user verification across the protected layout and destination page during one navigation.
+- Reduced the MongoDB user lookup to the three authentication fields required by navigation guards.
+- Server-rendered the first Feed and Student Directory result sets and removed their duplicate browser requests after page load.
+- Added a short-lived server cache for the shared directory dataset so filter/navigation traffic does not repeatedly rebuild the same 40-profile source list.
+- Added an immediate protected-route loading state so navigation always provides visual feedback during server work or a serverless cold start.
+- Verification: 37 tests, TypeScript, lint, and optimized production compilation pass.
+
 ## UX-008 — Navigation, discovery, ownership, sharing, and safety pass (2026-09-28)
 
 - Replaced the desktop icon rail with a labelled navigation sidebar and added direct destinations for Student directory, AI people search, Community feed, and the clearer `Venture showcase` experience.
