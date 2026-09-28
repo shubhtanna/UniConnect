@@ -3,6 +3,7 @@ import { z } from "zod";
 const serverEnvSchema = z.object({
   DATABASE_MODE: z.enum(["mongodb", "memory"]).default("mongodb"),
   MONGODB_URI: z.string().optional(),
+  MONGODB_DB: z.string().trim().min(1).default("uniconnect"),
   SESSION_SECRET: z.string().min(32, "SESSION_SECRET must be at least 32 characters"),
   OTP_PEPPER: z.string().min(32, "OTP_PEPPER must be at least 32 characters"),
   SMTP_HOST: z.string().optional(),

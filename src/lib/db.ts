@@ -21,11 +21,12 @@ export async function connectToDatabase() {
   if (cache.connection) return cache.connection;
 
   if (!cache.promise) {
-    const { MONGODB_URI } = getServerEnv();
+    const { MONGODB_URI, MONGODB_DB } = getServerEnv();
     if (!MONGODB_URI) throw new Error("MONGODB_URI is required");
     cache.promise = mongoose.connect(MONGODB_URI, {
       bufferCommands: false,
       maxPoolSize: 10,
+      dbName: MONGODB_DB,
     });
   }
 

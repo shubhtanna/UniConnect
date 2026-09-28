@@ -16,7 +16,8 @@
     "db:seed-demo": "node scripts/seed-demo.mjs",
     "services:check": "node --env-file=.env.local scripts/check-services.mjs",
     "master-cv:import": "node --env-file=.env.local --import tsx scripts/import-master-cvs.ts",
-    "master-cv:status": "node --env-file=.env.local --import tsx scripts/master-cv-status.ts"
+    "master-cv:status": "node --env-file=.env.local --import tsx scripts/master-cv-status.ts",
+    "db:migrate": "node --env-file=.env.local scripts/migrate-database.mjs"
   },
   "dependencies": {
     "@napi-rs/canvas": "^1.0.9",

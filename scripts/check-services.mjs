@@ -5,7 +5,10 @@ import nodemailer from "nodemailer";
 const results = [];
 
 await check("MongoDB Atlas", async () => {
-  await mongoose.connect(required("MONGODB_URI"), { serverSelectionTimeoutMS: 15_000 });
+  await mongoose.connect(required("MONGODB_URI"), {
+    serverSelectionTimeoutMS: 15_000,
+    dbName: process.env.MONGODB_DB ?? "uniconnect",
+  });
   await mongoose.connection.db?.admin().ping();
   await mongoose.disconnect();
 });

@@ -569,3 +569,14 @@ The previously proposed discovery direction is now partially implemented and sup
 Research-informed boundaries: directory filters stay profile-first; interests remain explicit rather than inferred; viewer privacy is visible and controllable; groups are focused persistent spaces rather than another algorithmic feed. There are no popularity scores, follower mechanics, or automatic messages.
 
 Verification: 31 unit tests pass, along with strict TypeScript, lint, and local/remote optimized production builds. Conventional MongoDB indexes cover interests, profile views, groups, and group messages. Deployment `dpl_BtJWbA45dfHkKxF6zotzmLBZkMht` is Ready at `https://uniconnect-teal.vercel.app`; homepage/login, protected redirects, and connected-service health were verified. Authenticated browser verification with consenting accounts remains in `PENDING.md`, along with group moderation/lifecycle controls and a small relevance pilot.
+
+## 20. MongoDB database correction on 2026-09-28
+
+The Atlas connection string had no database path, so Mongoose used MongoDB's default `test` database. This was configuration behavior, not automated test data. The issue was corrected without deleting or overwriting production records:
+
+- `MONGODB_DB` now defaults to and is explicitly configured as `uniconnect` in application, local, production, index, service-check, and seed connections.
+- `scripts/migrate-database.mjs` copied only the nine known UniConnect collections from `test` to an empty `uniconnect` destination, preserved IDs/indexes, and verified counts and identifier sets.
+- Verified destination data: 6 users, 5 profiles, 36 preloaded profiles, 1 post, and supporting rate-limit/profile-view data. Empty group collections and their indexes were created intentionally.
+- The Atlas `profile_embedding` index in `uniconnect` is Ready and queryable.
+- Deployment `dpl_HTArqQ17MsAv4VgYZUFtwUw2NHk6` is Ready at the stable alias. Production health is connected, and a new live profile-view record appeared in `uniconnect` while the old `test` counts remained unchanged, confirming the runtime switch.
+- The old UniConnect collections in `test` remain temporarily as a rollback copy. Do not drop the entire `test` database because it also contains unrelated Dealspouch collections. Cleanup is recorded in `PENDING.md` and requires deliberate approval after the retention window.

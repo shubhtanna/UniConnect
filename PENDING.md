@@ -29,6 +29,11 @@ Last reviewed: 2026-09-28
 
 ## Environment verification
 
+- [ ] **OPS-005-CLEANUP — Retire the former `test` database copy**
+  - Production now explicitly uses `uniconnect`, and migration counts plus live-write behavior were verified on 2026-09-28.
+  - Keep the old UniConnect collections in `test` temporarily as a rollback copy while authenticated user journeys are checked.
+  - After an agreed retention window and a final backup/verification, remove only the known UniConnect collections from `test`; do not affect unrelated Dealspouch collections in that shared database.
+
 ## Discovery expansion rollout
 
 Deployment `dpl_BtJWbA45dfHkKxF6zotzmLBZkMht` published the four-feature expansion to `https://uniconnect-teal.vercel.app` on 2026-09-28. The stable homepage/login return HTTP 200; anonymous directory, insights, and groups requests redirect to login; `/api/health` reports MongoDB, Cloudinary, email, and AI connected.

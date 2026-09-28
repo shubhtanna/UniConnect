@@ -18,6 +18,7 @@ No OAuth, payment, maps, analytics, or messaging provider is required for the cu
 NODE_ENV=production
 DATABASE_MODE=mongodb
 MONGODB_URI=mongodb+srv://...
+MONGODB_DB=uniconnect
 
 SESSION_SECRET=<unique random value of at least 32 characters>
 OTP_PEPPER=<different random value of at least 32 characters>

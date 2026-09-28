@@ -425,3 +425,18 @@ Verification:
 - Three group tests cover tag normalization, invite-domain restrictions, tag caps, and message boundaries.
 - The full suite passes 31 tests, followed by typecheck, lint, and optimized production compilation.
 - Production deployment `dpl_BtJWbA45dfHkKxF6zotzmLBZkMht` is Ready at the stable UniConnect alias; public routes, protected redirects, and connected-service health were verified.
+
+### OPS-005 — Dedicated MongoDB database
+
+Completed: 2026-09-28
+
+- All application and operational connections explicitly select the `uniconnect` database through `MONGODB_DB`; a missing path in `MONGODB_URI` can no longer silently route the app into MongoDB's default `test` database.
+- A guarded migration tool copies only UniConnect collections, refuses an occupied destination, preserves object IDs and indexes, verifies document counts/identifiers, and never deletes the source.
+- Existing users, completed profiles, pending Master CV profiles, posts, rate-limit records, and profile-view records were copied from `test` to `uniconnect`.
+- Production and local configuration now use `MONGODB_DB=uniconnect`; scripts for indexes, service checks, and demo data use the same explicit database.
+
+Verification:
+
+- The migration verified 6 users, 5 completed profiles, 36 preloaded profiles, 1 post, and supporting records in `uniconnect`.
+- The `profile_embedding` Atlas index is Ready and queryable in `uniconnect`.
+- Production deployment `dpl_HTArqQ17MsAv4VgYZUFtwUw2NHk6` is Ready and healthy; a post-deployment profile-view write appeared in `uniconnect` while the retained `test` counts remained unchanged.

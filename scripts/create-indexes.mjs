@@ -2,8 +2,9 @@ import mongoose from "mongoose";
 
 const uri = process.env.MONGODB_URI;
 if (!uri) throw new Error("Set MONGODB_URI before creating indexes");
+const databaseName = process.env.MONGODB_DB ?? "uniconnect";
 
-await mongoose.connect(uri, { maxPoolSize: 5 });
+await mongoose.connect(uri, { maxPoolSize: 5, dbName: databaseName });
 const database = mongoose.connection.db;
 if (!database) throw new Error("MongoDB connection did not provide a database");
 

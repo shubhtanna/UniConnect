@@ -5,7 +5,9 @@ if (process.env.NODE_ENV === "production") throw new Error("Demo seeding is disa
 if (process.env.ALLOW_DEMO_SEED !== "true") throw new Error("Set ALLOW_DEMO_SEED=true to confirm local demo seeding");
 if (!process.env.MONGODB_URI) throw new Error("Set MONGODB_URI before seeding");
 
-await mongoose.connect(process.env.MONGODB_URI);
+await mongoose.connect(process.env.MONGODB_URI, {
+  dbName: process.env.MONGODB_DB ?? "uniconnect",
+});
 const database = mongoose.connection.db;
 if (!database) throw new Error("MongoDB connection did not provide a database");
 
