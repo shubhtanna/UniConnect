@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import type { ConnectionSearchResponse } from "@/lib/connection-types";
 import type { DirectoryResponse } from "@/lib/directory-types";
 import { DirectoryBrowser } from "@/components/connections/DirectoryBrowser";
@@ -21,7 +21,6 @@ export function ConnectionsClient({
   initialMode?: "browse" | "search";
   initialDirectory?: DirectoryResponse | null;
 }) {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const requestedMode =
     searchParams.get("mode") === "search" ? "search" : initialMode;
@@ -34,7 +33,7 @@ export function ConnectionsClient({
 
   function changeMode(nextMode: "browse" | "search") {
     setMode(nextMode);
-    router.replace(`/connections?mode=${nextMode}`, { scroll: false });
+    window.history.replaceState(null, "", `/connections?mode=${nextMode}`);
   }
 
   async function search(

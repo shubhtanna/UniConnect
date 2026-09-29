@@ -9,32 +9,43 @@ import { hashOtp, isOtpExpired, OTP_MAX_ATTEMPTS, otpMatches } from "@/lib/otp";
 import { SESSION_COOKIE, sessionCookieOptions } from "@/lib/session";
 import { createSessionToken } from "@/lib/session-token";
 import { verifyOtpSchema } from "@/lib/validation";
-import { checkRateLimit, rateLimitResponse, requestIdentity } from "@/lib/rate-limit";
+import {
+  checkRateLimit,
+  rateLimitResponse,
+  requestIdentity,
+} from "@/lib/rate-limit";
 import { postAuthRedirect } from "@/lib/navigation";
 import { logServerError } from "@/lib/logger";
 import { claimPreloadedProfile } from "@/lib/preloaded-profile";
 
 export async function POST(request: Request) {
   try {
-    const ipLimit = await checkRateLimit({
+    const ipLimitPromise = checkRateLimit({
       scope: "otp-verify-ip",
       identity: requestIdentity(request),
       limit: 20,
       windowMs: 15 * 60 * 1000,
     });
-    if (!ipLimit.allowed) return rateLimitResponse(ipLimit.retryAfter);
     const body = await request.json();
     const parsed = verifyOtpSchema.safeParse(body);
 
     if (!parsed.success) {
+      const ipLimit = await ipLimitPromise;
+      if (!ipLimit.allowed) return rateLimitResponse(ipLimit.retryAfter);
       return NextResponse.json(
-        { error: parsed.error.issues[0]?.message ?? "Invalid verification code" },
+        {
+          error: parsed.error.issues[0]?.message ?? "Invalid verification code",
+        },
         { status: 400 },
       );
     }
 
     const { email, otp } = parsed.data;
-    const challenge = await getAuthChallenge(email);
+    const [ipLimit, challenge] = await Promise.all([
+      ipLimitPromise,
+      getAuthChallenge(email),
+    ]);
+    if (!ipLimit.allowed) return rateLimitResponse(ipLimit.retryAfter);
     if (!challenge || isOtpExpired(challenge.expiresAt)) {
       if (challenge) await deleteAuthChallenge(email);
       return NextResponse.json(
@@ -61,17 +72,23 @@ export async function POST(request: Request) {
     }
 
     const user = await upsertVerifiedUser(email);
-    const claimedPreloadedProfile = await claimPreloadedProfile(user.id, user.email);
+    const claimedPreloadedProfile = await claimPreloadedProfile(
+      user.id,
+      user.email,
+    );
 
-    await deleteAuthChallenge(email);
-
-    const token = await createSessionToken({
-      userId: user.id,
-      email: user.email,
-    });
+    const [, token] = await Promise.all([
+      deleteAuthChallenge(email),
+      createSessionToken({
+        userId: user.id,
+        email: user.email,
+      }),
+    ]);
     const response = NextResponse.json({
       ok: true,
-      redirectTo: postAuthRedirect(user.isProfileComplete || claimedPreloadedProfile),
+      redirectTo: postAuthRedirect(
+        user.isProfileComplete || claimedPreloadedProfile,
+      ),
     });
     response.cookies.set(SESSION_COOKIE, token, sessionCookieOptions());
     return response;

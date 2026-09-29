@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { requireCompleteUser } from "@/lib/auth";
+import { requirePageSession } from "@/lib/auth";
 import { getGroupRoom } from "@/lib/group-store";
 import {
   GroupMessageActions,
@@ -13,7 +13,7 @@ export default async function Page({
 }: {
   params: Promise<{ groupId: string }>;
 }) {
-  const user = await requireCompleteUser();
+  const user = await requirePageSession();
   const { groupId } = await params;
   const room = await getGroupRoom(user.id, groupId);
   if (!room) notFound();

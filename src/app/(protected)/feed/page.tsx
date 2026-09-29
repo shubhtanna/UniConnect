@@ -1,4 +1,4 @@
-import { requireCompleteUser } from "@/lib/auth";
+import { requirePageSession } from "@/lib/auth";
 import { getProfileByUserId } from "@/lib/profile-store";
 import { FeedClient } from "@/components/feed/FeedClient";
 import { listPosts } from "@/lib/feed-store";
@@ -8,7 +8,7 @@ export default async function FeedPage({
 }: {
   searchParams: Promise<{ type?: string }>;
 }) {
-  const user = await requireCompleteUser();
+  const user = await requirePageSession();
   const requested = (await searchParams).type;
   const initialType = requested === "spotlight" ? "spotlight" : "community";
   const [profile, initialFeed] = await Promise.all([

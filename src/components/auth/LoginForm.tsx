@@ -4,6 +4,7 @@ import { FormEvent, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 type Step = "email" | "otp";
+type Status = "idle" | "sending" | "verifying" | "navigating";
 
 async function postJson(url: string, body: Record<string, string>) {
   const response = await fetch(url, {
@@ -11,7 +12,11 @@ async function postJson(url: string, body: Record<string, string>) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  const data = (await response.json()) as { error?: string; redirectTo?: string; devOtp?: string };
+  const data = (await response.json()) as {
+    error?: string;
+    redirectTo?: string;
+    devOtp?: string;
+  };
   if (!response.ok) throw new Error(data.error ?? "Something went wrong");
   return data;
 }
@@ -24,38 +29,52 @@ export function LoginForm() {
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
   const [devOtp, setDevOtp] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState<Status>("idle");
 
   async function requestOtp(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
-    setLoading(true);
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!/^[^\s@]+@mastersunion\.org$/.test(normalizedEmail)) {
+      setError("Use your official @mastersunion.org email address.");
+      return;
+    }
+    setEmail(normalizedEmail);
+    setStatus("sending");
+    setStep("otp");
+    window.setTimeout(() => otpInput.current?.focus(), 0);
 
     try {
       const result = await postJson("/api/auth/request-otp", { email });
       setDevOtp(result.devOtp ?? "");
-      setStep("otp");
-      window.setTimeout(() => otpInput.current?.focus(), 0);
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : "Could not send the code");
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Could not send the code",
+      );
+      setStep("email");
     } finally {
-      setLoading(false);
+      setStatus("idle");
     }
   }
 
   async function verifyOtp(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
-    setLoading(true);
+    setStatus("verifying");
 
     try {
       const result = await postJson("/api/auth/verify-otp", { email, otp });
-      router.push(result.redirectTo ?? "/dashboard");
-      router.refresh();
+      setStatus("navigating");
+      router.replace(result.redirectTo ?? "/dashboard");
     } catch (verifyError) {
-      setError(verifyError instanceof Error ? verifyError.message : "Could not verify the code");
-    } finally {
-      setLoading(false);
+      setError(
+        verifyError instanceof Error
+          ? verifyError.message
+          : "Could not verify the code",
+      );
+      setStatus("idle");
     }
   }
 
@@ -68,12 +87,16 @@ export function LoginForm() {
       <p className="mt-3 leading-7 text-ink/60">
         {step === "email"
           ? "Enter your official MU email and we'll send you a secure sign-in code."
-          : `We sent a 6-digit code to ${email}. It expires in 10 minutes.`}
+          : status === "sending"
+            ? `Preparing a secure code for ${email}…`
+            : `We sent a 6-digit code to ${email}. It expires in 10 minutes.`}
       </p>
 
       {step === "email" ? (
         <form className="mt-9" onSubmit={requestOtp} noValidate>
-          <label className="field-label" htmlFor="email">MU email address</label>
+          <label className="field-label" htmlFor="email">
+            MU email address
+          </label>
           <input
             className="text-field"
             id="email"
@@ -86,20 +109,23 @@ export function LoginForm() {
             aria-describedby={error ? "login-error" : "email-help"}
             required
           />
-          {devOtp && (
-            <p className="mt-3 rounded-xl border border-teal/20 bg-teal/10 px-4 py-3 text-sm text-teal">
-              Local development code: <strong className="tracking-[0.18em]">{devOtp}</strong>
-            </p>
-          )}
-          <p id="email-help" className="mt-2 text-xs text-ink/45">Personal and non-MU email addresses are not accepted.</p>
+          <p id="email-help" className="mt-2 text-xs text-ink/45">
+            Personal and non-MU email addresses are not accepted.
+          </p>
           {error && <ErrorMessage message={error} />}
-          <button className="primary-button mt-6 w-full" type="submit" disabled={loading}>
-            {loading ? "Sending code…" : "Send verification code"}
+          <button
+            className="primary-button mt-6 w-full"
+            type="submit"
+            disabled={status !== "idle"}
+          >
+            {status === "sending" ? "Sending code…" : "Send verification code"}
           </button>
         </form>
       ) : (
         <form className="mt-9" onSubmit={verifyOtp} noValidate>
-          <label className="field-label" htmlFor="otp">Verification code</label>
+          <label className="field-label" htmlFor="otp">
+            Verification code
+          </label>
           <input
             ref={otpInput}
             className="text-field text-center !text-2xl !tracking-[0.3em]"
@@ -111,13 +137,37 @@ export function LoginForm() {
             maxLength={6}
             placeholder="000000"
             value={otp}
-            onChange={(event) => setOtp(event.target.value.replace(/\D/g, "").slice(0, 6))}
+            onChange={(event) =>
+              setOtp(event.target.value.replace(/\D/g, "").slice(0, 6))
+            }
             aria-describedby={error ? "login-error" : undefined}
+            disabled={status === "sending" || status === "navigating"}
             required
           />
+          {status === "sending" && (
+            <p className="mt-3 text-center text-sm text-ink/55" role="status">
+              Preparing your secure code…
+            </p>
+          )}
+          {devOtp && (
+            <p className="mt-3 rounded-xl border border-teal/20 bg-teal/10 px-4 py-3 text-sm text-teal">
+              Local development code:{" "}
+              <strong className="tracking-[0.18em]">{devOtp}</strong>
+            </p>
+          )}
           {error && <ErrorMessage message={error} />}
-          <button className="primary-button mt-6 w-full" type="submit" disabled={loading || otp.length !== 6}>
-            {loading ? "Verifying…" : "Verify and continue"}
+          <button
+            className="primary-button mt-6 w-full"
+            type="submit"
+            disabled={status !== "idle" || otp.length !== 6}
+          >
+            {status === "verifying"
+              ? "Verifying…"
+              : status === "navigating"
+                ? "Opening UniConnect…"
+                : status === "sending"
+                  ? "Sending code…"
+                  : "Verify and continue"}
           </button>
           <button
             className="mt-4 w-full py-2 text-sm font-semibold text-teal hover:underline"
@@ -127,7 +177,9 @@ export function LoginForm() {
               setOtp("");
               setError("");
               setDevOtp("");
+              setStatus("idle");
             }}
+            disabled={status !== "idle"}
           >
             Use a different email
           </button>
@@ -139,7 +191,11 @@ export function LoginForm() {
 
 function ErrorMessage({ message }: { message: string }) {
   return (
-    <p id="login-error" role="alert" className="mt-3 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
+    <p
+      id="login-error"
+      role="alert"
+      className="mt-3 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700"
+    >
       {message}
     </p>
   );

@@ -479,3 +479,18 @@ Verification:
 
 - All 37 automated tests, strict TypeScript validation, lint, and the optimized production build pass.
 - The static homepage remains only 165 B of route-specific JavaScript and 106 kB first-load JavaScript.
+
+### PERF-002 — Sign-in and feature-navigation latency pass
+
+Completed: 2026-09-29
+
+- Email submission changes to the OTP screen immediately while delivery completes, with accurate sending and navigation states instead of an apparently frozen form.
+- OTP request rate limits and challenge lookup run concurrently; verification performs its independent security lookup concurrently and removes the duplicate client refresh after success.
+- Returning users bypass the MongoDB transaction used only for an actually pending Master CV claim.
+- Nodemailer reuses a small warm SMTP connection pool when the serverless instance survives between requests.
+- Protected pages reuse the signed session already guarded by their shared security layout instead of querying the user record again on every feature navigation.
+- Sidebar links prefetch on intent and show an immediate global navigation progress bar; local Connections mode changes no longer cause a redundant server navigation.
+
+Verification:
+
+- All 37 automated tests, strict TypeScript validation, lint, and the optimized production build pass.

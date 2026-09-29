@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Logo } from "@/components/Logo";
 
 const navItems = [
@@ -22,8 +23,12 @@ export function AppShell({
   children: React.ReactNode;
   email: string;
 }) {
+  const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const query = searchParams.toString();
+  const [pendingHref, setPendingHref] = useState("");
+  useEffect(() => setPendingHref(""), [pathname, query]);
   const isActive = (href: string) => {
     const [path, query] = href.split("?");
     if (pathname !== path && !pathname.startsWith(`${path}/`)) return false;
@@ -33,7 +38,19 @@ export function AppShell({
     );
   };
   return (
-    <div className="min-h-screen bg-app text-ink">
+    <div
+      className="min-h-screen bg-app text-ink"
+      aria-busy={Boolean(pendingHref)}
+    >
+      {pendingHref && (
+        <div
+          className="fixed inset-x-0 top-0 z-[100] h-0.5 overflow-hidden bg-teal/15"
+          role="progressbar"
+          aria-label="Opening page"
+        >
+          <span className="block h-full w-2/3 animate-pulse bg-gradient-to-r from-teal to-amber" />
+        </div>
+      )}
       <a
         href="#main-content"
         className="sr-only fixed left-4 top-4 z-[100] rounded-full bg-teal px-4 py-2 font-semibold text-app focus:not-sr-only"
@@ -59,6 +76,12 @@ export function AppShell({
             <Link
               key={item.href}
               href={item.href}
+              prefetch
+              onMouseEnter={() => router.prefetch(item.href)}
+              onFocus={() => router.prefetch(item.href)}
+              onClick={() => {
+                if (!isActive(item.href)) setPendingHref(item.href);
+              }}
               aria-current={isActive(item.href) ? "page" : undefined}
               className={`flex min-h-11 items-center gap-3 rounded-xl border px-3 text-sm font-medium transition ${isActive(item.href) ? "border-teal/40 bg-teal/10 text-teal" : "border-transparent text-muted hover:border-line hover:bg-white/5 hover:text-ink"}`}
             >
@@ -108,6 +131,11 @@ export function AppShell({
           <Link
             key={item.href}
             href={item.href}
+            prefetch
+            onTouchStart={() => router.prefetch(item.href)}
+            onClick={() => {
+              if (!isActive(item.href)) setPendingHref(item.href);
+            }}
             className={`flex min-w-[4.5rem] flex-col items-center gap-0.5 rounded-xl px-2 py-1.5 ${isActive(item.href) ? "bg-teal/10 text-teal" : "text-muted"}`}
             aria-label={item.label}
             aria-current={isActive(item.href) ? "page" : undefined}

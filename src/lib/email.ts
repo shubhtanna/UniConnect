@@ -1,6 +1,11 @@
 import nodemailer from "nodemailer";
 import { getServerEnv } from "@/lib/env";
 
+type MailTransport = ReturnType<typeof nodemailer.createTransport>;
+const globalWithMail = globalThis as typeof globalThis & {
+  uniconnectMailTransport?: MailTransport;
+};
+
 export async function sendOtpEmail(email: string, otp: string) {
   const env = getServerEnv();
 
@@ -13,15 +18,21 @@ export async function sendOtpEmail(email: string, otp: string) {
     return;
   }
 
-  const transporter = nodemailer.createTransport({
-    host: env.SMTP_HOST,
-    port: env.SMTP_PORT,
-    secure: env.SMTP_SECURE,
-    auth:
-      env.SMTP_USER && env.SMTP_PASSWORD
-        ? { user: env.SMTP_USER, pass: env.SMTP_PASSWORD }
-        : undefined,
-  });
+  const transporter =
+    globalWithMail.uniconnectMailTransport ??
+    nodemailer.createTransport({
+      pool: true,
+      maxConnections: 2,
+      maxMessages: 50,
+      host: env.SMTP_HOST,
+      port: env.SMTP_PORT,
+      secure: env.SMTP_SECURE,
+      auth:
+        env.SMTP_USER && env.SMTP_PASSWORD
+          ? { user: env.SMTP_USER, pass: env.SMTP_PASSWORD }
+          : undefined,
+    });
+  globalWithMail.uniconnectMailTransport = transporter;
 
   await transporter.sendMail({
     from: env.SMTP_FROM,

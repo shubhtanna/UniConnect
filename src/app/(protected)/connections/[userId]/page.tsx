@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getConnectionProfile } from "@/lib/profile-store";
-import { requireCompleteUser } from "@/lib/auth";
+import { requirePageSession } from "@/lib/auth";
 import { recordProfileView } from "@/lib/discovery-insights";
 
 export default async function ConnectionProfilePage({
@@ -11,7 +11,7 @@ export default async function ConnectionProfilePage({
   params: Promise<{ userId: string }>;
 }) {
   const { userId } = await params;
-  const viewer = await requireCompleteUser();
+  const viewer = await requirePageSession();
   const profile = await getConnectionProfile(userId);
   if (!profile) notFound();
   if (profile.profileState !== "unclaimed") {

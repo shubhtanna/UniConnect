@@ -13,22 +13,27 @@ import {
   OTP_TTL_MS,
 } from "@/lib/otp";
 import { requestOtpSchema } from "@/lib/validation";
-import { checkRateLimit, rateLimitResponse, requestIdentity } from "@/lib/rate-limit";
+import {
+  checkRateLimit,
+  rateLimitResponse,
+  requestIdentity,
+} from "@/lib/rate-limit";
 import { logServerError } from "@/lib/logger";
 
 export async function POST(request: Request) {
   try {
-    const ipLimit = await checkRateLimit({
+    const ipLimitPromise = checkRateLimit({
       scope: "otp-request-ip",
       identity: requestIdentity(request),
       limit: 8,
       windowMs: 15 * 60 * 1000,
     });
-    if (!ipLimit.allowed) return rateLimitResponse(ipLimit.retryAfter);
     const body = await request.json();
     const parsed = requestOtpSchema.safeParse(body);
 
     if (!parsed.success) {
+      const ipLimit = await ipLimitPromise;
+      if (!ipLimit.allowed) return rateLimitResponse(ipLimit.retryAfter);
       return NextResponse.json(
         { error: parsed.error.issues[0]?.message ?? "Invalid email address" },
         { status: 400 },
@@ -36,20 +41,26 @@ export async function POST(request: Request) {
     }
 
     const { email } = parsed.data;
-    const emailLimit = await checkRateLimit({
-      scope: "otp-request-email",
-      identity: email,
-      limit: 5,
-      windowMs: 60 * 60 * 1000,
-    });
+    const [ipLimit, emailLimit, existing] = await Promise.all([
+      ipLimitPromise,
+      checkRateLimit({
+        scope: "otp-request-email",
+        identity: email,
+        limit: 5,
+        windowMs: 60 * 60 * 1000,
+      }),
+      getAuthChallenge(email),
+    ]);
+    if (!ipLimit.allowed) return rateLimitResponse(ipLimit.retryAfter);
     if (!emailLimit.allowed) return rateLimitResponse(emailLimit.retryAfter);
-    const existing = await getAuthChallenge(email);
     if (existing && existing.resendAvailableAt.getTime() > Date.now()) {
       const retryAfter = Math.ceil(
         (existing.resendAvailableAt.getTime() - Date.now()) / 1000,
       );
       return NextResponse.json(
-        { error: `Please wait ${retryAfter} seconds before requesting another code.` },
+        {
+          error: `Please wait ${retryAfter} seconds before requesting another code.`,
+        },
         { status: 429, headers: { "Retry-After": retryAfter.toString() } },
       );
     }
@@ -79,7 +90,9 @@ export async function POST(request: Request) {
     return NextResponse.json({
       ok: true,
       expiresInSeconds: OTP_TTL_MS / 1000,
-      ...(env.NODE_ENV === "development" && !env.SMTP_HOST ? { devOtp: otp } : {}),
+      ...(env.NODE_ENV === "development" && !env.SMTP_HOST
+        ? { devOtp: otp }
+        : {}),
     });
   } catch (error) {
     logServerError("otp_request_failed", error);

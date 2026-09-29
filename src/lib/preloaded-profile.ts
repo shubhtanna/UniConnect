@@ -191,6 +191,11 @@ export async function stagePreloadedProfiles(
 export async function claimPreloadedProfile(userId: string, email: string) {
   if (getServerEnv().DATABASE_MODE === "memory") return false;
   const database = await connectToDatabase();
+  const pendingProfile = await PreloadedProfile.exists({
+    email,
+    status: "pending",
+  });
+  if (!pendingProfile) return false;
   const session = await database.startSession();
   let claimed = false;
 

@@ -1,13 +1,13 @@
 import Image from "next/image";
 import Link from "next/link";
-import { requireCompleteUser } from "@/lib/auth";
+import { requirePageSession } from "@/lib/auth";
 import { getDiscoveryInsights } from "@/lib/discovery-insights";
 import { ViewModeControl } from "@/components/insights/ViewModeControl";
 
 export const metadata = { title: "Discovery insights" };
 
 export default async function InsightsPage() {
-  const user = await requireCompleteUser();
+  const user = await requirePageSession();
   const insights = await getDiscoveryInsights(user.id);
   return <main className="min-h-screen px-5 pb-28 pt-9 sm:px-10 lg:px-12"><div className="mx-auto max-w-6xl">
     <p className="eyebrow">Discovery insights</p><h1 className="mt-3 text-4xl font-semibold tracking-[-0.045em]">Who may be looking for you.</h1><p className="mt-3 max-w-2xl text-muted">Useful signals for starting conversations—not popularity scores.</p>

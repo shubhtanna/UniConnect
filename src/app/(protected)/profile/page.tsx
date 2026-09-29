@@ -1,11 +1,11 @@
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { requireCompleteUser } from "@/lib/auth";
+import { requirePageSession } from "@/lib/auth";
 import { getProfileByUserId } from "@/lib/profile-store";
 
 export default async function ProfilePage() {
-  const user = await requireCompleteUser();
+  const user = await requirePageSession();
   const profile = await getProfileByUserId(user.id);
   if (!profile) notFound();
   const completion = Math.round(
