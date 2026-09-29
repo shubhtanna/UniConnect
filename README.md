@@ -4,7 +4,9 @@ UniConnect is a verified student network for Masters' Union. It helps students d
 
 ## Project status
 
-Latest release (2026-09-29): sign-in and protected navigation now provide immediate feedback and perform less serial work. The OTP screen opens as soon as a valid submission begins, independent rate-limit/database checks run together, returning users skip unnecessary profile-claim transactions, successful verification no longer triggers a duplicate refresh, warm SMTP connections are reused, and feature links prefetch without repeating the protected-layout account query.
+Latest release (2026-09-29): the desktop sign-in/OTP layout now stays inside the available viewport without requiring page scrolling, while mobile retains safe scrolling. Student profile views now use a clearer compact identity header, collaboration/project summaries, expandable skills, interests, and timeline-style experience/education cards. Profile-view analytics are recorded after rendering so they no longer delay the page.
+
+Sign-in and protected navigation now provide immediate feedback and perform less serial work. The OTP screen opens as soon as a valid submission begins, independent rate-limit/database checks run together, returning users skip unnecessary profile-claim transactions, successful verification no longer triggers a duplicate refresh, warm SMTP connections are reused, and feature links prefetch without repeating the protected-layout account query.
 
 The public homepage now reflects the current product instead of the earlier resume-only concept. It presents profile claiming, intent-based discovery, the complete directory, AI people search, discovery insights, brainstorm rooms, Community, Venture Showcase, and the product's privacy boundaries in a tighter responsive layout.
 

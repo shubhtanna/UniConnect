@@ -494,3 +494,18 @@ Completed: 2026-09-29
 Verification:
 
 - All 37 automated tests, strict TypeScript validation, lint, and the optimized production build pass.
+
+### UI-003 — Compact OTP and student profile redesign
+
+Completed: 2026-09-29
+
+- The desktop login route now uses the dynamic viewport height and a compact flex/grid layout so the full OTP interaction remains visible without page scrolling at standard laptop and desktop heights.
+- Smaller screens retain normal document scrolling, and exceptionally short desktop viewports can scroll only the form card instead of losing page controls.
+- Student profiles now lead with a compact identity and action header, followed by separate collaboration and current-project summaries.
+- Skill overload is reduced by showing the first 12 capabilities and placing the remainder in an accessible native expandable section.
+- Interests, experience, and education now have distinct visual hierarchy, empty states, item counts, and timeline presentation.
+- Profile-view tracking runs after the response is rendered, preventing the analytics write from delaying profile navigation.
+
+Verification:
+
+- All 37 automated tests, strict TypeScript validation, and lint pass.
