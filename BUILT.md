@@ -464,3 +464,18 @@ Verification:
 - The migration verified 6 users, 5 completed profiles, 36 preloaded profiles, 1 post, and supporting records in `uniconnect`.
 - The `profile_embedding` Atlas index is Ready and queryable in `uniconnect`.
 - Production deployment `dpl_HTArqQ17MsAv4VgYZUFtwUw2NHk6` is Ready and healthy; a post-deployment profile-view write appeared in `uniconnect` while the retained `test` counts remained unchanged.
+
+### WEB-002 — Current-product public homepage
+
+Completed: 2026-09-29
+
+- Reframed UniConnect as an intent-based people-discovery product rather than another student social network.
+- Replaced placeholder skeleton cards and inaccurate scale claims with a credible AI people-search preview and precise, privacy-safe product language.
+- The public journey now explains prepared profile claiming, student-controlled review, interests and collaboration intent, directory browsing, AI search, discovery insights, brainstorm rooms, Community, and Venture Showcase.
+- Added clear trust messaging for verified access, private source resumes, editable prepared profiles, and named/anonymous profile-view preferences.
+- Tightened every section's spacing and information hierarchy so the page no longer has oversized empty gaps on desktop, while retaining responsive mobile layouts.
+
+Verification:
+
+- All 37 automated tests, strict TypeScript validation, lint, and the optimized production build pass.
+- The static homepage remains only 165 B of route-specific JavaScript and 106 kB first-load JavaScript.
