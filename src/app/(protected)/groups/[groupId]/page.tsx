@@ -7,6 +7,7 @@ import {
   InviteMembers,
   JoinGroup,
   MessageComposer,
+  RevokeInvitationButton,
 } from "@/components/groups/GroupActions";
 
 export default async function Page({
@@ -97,6 +98,12 @@ export default async function Page({
                       Email {invitation.deliveryStatus}
                     </span>
                   </div>
+                  {invitation.status === "pending" && (
+                    <RevokeInvitationButton
+                      groupId={groupId}
+                      invitationId={invitation.id}
+                    />
+                  )}
                 </div>
               ))}
             </div>

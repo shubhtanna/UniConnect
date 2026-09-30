@@ -189,6 +189,60 @@ export function InviteMembers({ groupId }: { groupId: string }) {
   );
 }
 
+export function RevokeInvitationButton({
+  groupId,
+  invitationId,
+}: {
+  groupId: string;
+  invitationId: string;
+}) {
+  const router = useRouter();
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  async function revoke() {
+    if (
+      !window.confirm(
+        "Take back this invitation? The email cannot be recalled, but its invitation link will stop working.",
+      )
+    ) {
+      return;
+    }
+    setSubmitting(true);
+    setError("");
+    try {
+      const response = await fetch(
+        `/api/groups/${groupId}/invitations/${invitationId}`,
+        { method: "DELETE" },
+      );
+      if (!response.ok) {
+        const data = (await response.json()) as { error?: string };
+        setError(data.error ?? "Could not take back this invitation");
+        return;
+      }
+      router.refresh();
+    } catch {
+      setError("Could not reach UniConnect. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="text-right">
+      <button
+        type="button"
+        className="text-xs text-red-300 hover:text-red-200 disabled:opacity-60"
+        disabled={submitting}
+        onClick={() => void revoke()}
+      >
+        {submitting ? "Taking back…" : "Take back invitation"}
+      </button>
+      {error && <p className="mt-1 text-xs text-red-300">{error}</p>}
+    </div>
+  );
+}
+
 export function JoinGroup({ id }: { id: string }) {
   const router = useRouter();
   return (

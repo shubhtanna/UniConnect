@@ -266,6 +266,46 @@ export async function respondToGroupInvitation({
   }
 }
 
+export async function revokeGroupInvitation({
+  ownerId,
+  groupId,
+  invitationId,
+}: {
+  ownerId: string;
+  groupId: string;
+  invitationId: string;
+}) {
+  if (
+    !Types.ObjectId.isValid(groupId) ||
+    !Types.ObjectId.isValid(invitationId)
+  ) {
+    return "not_found" as const;
+  }
+  await connectToDatabase();
+  const ownsGroup = await BrainstormGroup.exists({
+    _id: groupId,
+    createdBy: ownerId,
+    status: "active",
+  });
+  if (!ownsGroup) return "forbidden" as const;
+
+  const invitation = await GroupInvitation.findOneAndUpdate(
+    {
+      _id: invitationId,
+      groupId,
+      status: "pending",
+    },
+    {
+      $set: {
+        status: "revoked",
+        respondedAt: new Date(),
+      },
+    },
+    { new: true },
+  ).lean();
+  return invitation ? ("revoked" as const) : ("not_found" as const);
+}
+
 export async function getVisibleGroups(userId: string) {
   await connectToDatabase();
   return BrainstormGroup.find({

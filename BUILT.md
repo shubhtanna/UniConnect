@@ -448,6 +448,7 @@ Completed: 2026-09-28
 - Only the exact invited MU account can accept or decline. Acceptance atomically adds the student to the group and enforces the 50-member cap; pending invitations are revoked if the group is archived.
 - Invitees see pending invitations on the Brainstorm groups page, while owners see sent/failed delivery status and pending/accepted/declined response status inside the room.
 - Group owners can invite additional members after creation in batches of up to 20 MU addresses; current members and existing pending/accepted invitations are skipped, while declined or revoked invitations can be sent again.
+- Owners can take back a pending invitation. The already-delivered email cannot be recalled, but the invitation immediately becomes unusable and can be replaced or re-sent later.
 
 Verification:
 
