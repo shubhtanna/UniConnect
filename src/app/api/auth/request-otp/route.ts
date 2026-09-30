@@ -23,9 +23,9 @@ import { logServerError } from "@/lib/logger";
 export async function POST(request: Request) {
   try {
     const ipLimitPromise = checkRateLimit({
-      scope: "otp-request-ip",
+      scope: "otp-request-campus-v2",
       identity: requestIdentity(request),
-      limit: 8,
+      limit: 75,
       windowMs: 15 * 60 * 1000,
     });
     const body = await request.json();

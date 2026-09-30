@@ -21,9 +21,9 @@ import { claimPreloadedProfile } from "@/lib/preloaded-profile";
 export async function POST(request: Request) {
   try {
     const ipLimitPromise = checkRateLimit({
-      scope: "otp-verify-ip",
+      scope: "otp-verify-campus-v2",
       identity: requestIdentity(request),
-      limit: 20,
+      limit: 200,
       windowMs: 15 * 60 * 1000,
     });
     const body = await request.json();

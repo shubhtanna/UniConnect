@@ -494,6 +494,7 @@ Completed: 2026-09-29
 - OTP request rate limits and challenge lookup run concurrently; verification performs its independent security lookup concurrently and removes the duplicate client refresh after success.
 - Returning users bypass the MongoDB transaction used only for an actually pending Master CV claim.
 - Nodemailer reuses a small warm SMTP connection pool when the serverless instance survives between requests.
+- Reset and raised shared-network OTP capacity for cohort onboarding: up to 75 code requests and 200 verification submissions per 15 minutes from one campus/office address, while retaining the stricter per-email, resend, expiry, and five-attempt protections.
 - Protected pages reuse the signed session already guarded by their shared security layout instead of querying the user record again on every feature navigation.
 - Sidebar links prefetch on intent and show an immediate global navigation progress bar; local Connections mode changes no longer cause a redundant server navigation.
 
