@@ -18,7 +18,8 @@
 - Post and comment reports now require a reason and retain structured report details for future moderation. Users cannot report their own content.
 - Added shared server-side content safety to community posts, venture posts, comments, report reasons, groups, and group messages. It rejects abusive language, executable markup/schemes, shortened or non-HTTPS links, credentialed URLs, local hosts, and IP-address URLs.
 - Group creators can edit or archive their group. Message authors can edit/delete their messages, and group creators can remove messages in their rooms.
-- Verification: 37 tests, strict TypeScript, lint/type validation, and the complete optimized production build pass.
+- Group invitations now persist independently of account creation, send through the configured SMTP provider, appear to the matching MU account after sign-in, support accept/decline, and expose delivery/response status to the group creator.
+- Verification: 38 tests, strict TypeScript, lint/type validation, and the complete optimized production build pass.
 
 ## PROF-007 — Secure Master CV profile preloading (2026-09-28)
 
@@ -443,11 +444,14 @@ Completed: 2026-09-28
 - Members get a persistent chronological discussion, while non-members see group context before joining.
 - Creation and posting are rate-limited; groups cap membership at 50, invites at 20 official MU addresses, and messages at 2,000 characters.
 - The create form exposes validation/server errors and makes access and invite behavior explicit.
+- Invitations are stored for every valid MU address, including students who have not signed in yet. Email delivery uses the configured SMTP account, and a failed delivery does not discard the in-app invitation.
+- Only the exact invited MU account can accept or decline. Acceptance atomically adds the student to the group and enforces the 50-member cap; pending invitations are revoked if the group is archived.
+- Invitees see pending invitations on the Brainstorm groups page, while owners see sent/failed delivery status and pending/accepted/declined response status inside the room.
 
 Verification:
 
-- Three group tests cover tag normalization, invite-domain restrictions, tag caps, and message boundaries.
-- The full suite passes 31 tests, followed by typecheck, lint, and optimized production compilation.
+- Group tests cover tag normalization, invite-domain restrictions, email deduplication, invitation-response validation, tag caps, message boundaries, and content safety.
+- The full suite passes 38 tests, followed by strict typecheck and optimized production compilation.
 - Production deployment `dpl_BtJWbA45dfHkKxF6zotzmLBZkMht` is Ready at the stable UniConnect alias; public routes, protected redirects, and connected-service health were verified.
 
 ### OPS-005 — Dedicated MongoDB database

@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { createGroupSchema, groupMessageSchema } from "@/lib/group-validation";
+import {
+  createGroupSchema,
+  groupInvitationResponseSchema,
+  groupMessageSchema,
+} from "@/lib/group-validation";
 
 test("brainstorm groups normalize and deduplicate topic tags", () => {
   const parsed = createGroupSchema.parse({
@@ -34,6 +38,29 @@ test("brainstorm groups reject invalid invite domains and excessive tags", () =>
 
   assert.equal(invalidEmail.success, false);
   assert.equal(tooManyTags.success, false);
+});
+
+test("brainstorm group invitations normalize duplicate emails and validate responses", () => {
+  const parsed = createGroupSchema.parse({
+    name: "Product builders",
+    description: "A focused room for classmates building useful products.",
+    tags: ["Product"],
+    access: "invite_only",
+    inviteEmails: [
+      "STUDENT@MASTERSUNION.ORG",
+      "student@mastersunion.org",
+    ],
+  });
+
+  assert.deepEqual(parsed.inviteEmails, ["student@mastersunion.org"]);
+  assert.equal(
+    groupInvitationResponseSchema.safeParse({ action: "accept" }).success,
+    true,
+  );
+  assert.equal(
+    groupInvitationResponseSchema.safeParse({ action: "ignore" }).success,
+    false,
+  );
 });
 
 test("brainstorm messages require content and enforce the length boundary", () => {

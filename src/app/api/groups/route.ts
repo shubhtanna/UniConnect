@@ -26,8 +26,17 @@ export async function POST(request: Request) {
       );
     }
 
-    const group = await createGroup(auth.user.id, parsed.data);
-    return NextResponse.json({ ok: true, groupId: group._id.toString() });
+    const result = await createGroup(
+      auth.user.id,
+      auth.user.email,
+      new URL(request.url).origin,
+      parsed.data,
+    );
+    return NextResponse.json({
+      ok: true,
+      groupId: result.group._id.toString(),
+      invitationSummary: result.invitationSummary,
+    });
   } catch (error) {
     logServerError("group_create_failed", error);
     return NextResponse.json(

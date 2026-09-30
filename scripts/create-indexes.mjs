@@ -23,6 +23,8 @@ await Promise.all([
   database.collection("brainstormgroups").createIndex({ status: 1, access: 1, updatedAt: -1 }),
   database.collection("brainstormgroups").createIndex({ memberIds: 1, updatedAt: -1 }),
   database.collection("brainstormmessages").createIndex({ groupId: 1, createdAt: 1 }),
+  database.collection("groupinvitations").createIndex({ groupId: 1, invitedEmail: 1 }, { unique: true }),
+  database.collection("groupinvitations").createIndex({ invitedEmail: 1, status: 1, createdAt: -1 }),
   database.collection("posts").createIndex({ type: 1, createdAt: -1 }),
   database.collection("posts").createIndex({ authorId: 1, type: 1, createdAt: -1 }),
   database.collection("ratelimits").createIndex({ key: 1 }, { unique: true }),

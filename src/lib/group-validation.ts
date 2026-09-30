@@ -23,7 +23,14 @@ export const createGroupSchema = z.object({
     .transform(normalizeProfileInterests)
     .pipe(z.array(z.string().min(2).max(30)).min(1).max(6)),
   access: z.enum(["open", "invite_only"]),
-  inviteEmails: z.array(muEmailSchema).max(20).default([]),
+  inviteEmails: z
+    .array(muEmailSchema)
+    .max(20)
+    .transform((emails) => [...new Set(emails)])
+    .default([]),
 });
 export const updateGroupSchema = createGroupSchema.omit({ inviteEmails: true });
 export const groupMessageSchema = z.object({ body: safeGroupText(1, 2000) });
+export const groupInvitationResponseSchema = z.object({
+  action: z.enum(["accept", "decline"]),
+});

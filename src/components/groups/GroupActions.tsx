@@ -3,6 +3,65 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
+export function InvitationActions({
+  invitationId,
+  groupId,
+}: {
+  invitationId: string;
+  groupId: string;
+}) {
+  const router = useRouter();
+  const [submitting, setSubmitting] = useState<"accept" | "decline" | "">("");
+  const [error, setError] = useState("");
+
+  async function respond(action: "accept" | "decline") {
+    setSubmitting(action);
+    setError("");
+    try {
+      const response = await fetch(`/api/groups/invitations/${invitationId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
+      const data = (await response.json()) as { error?: string };
+      if (!response.ok) {
+        setError(data.error ?? "Could not update this invitation");
+        return;
+      }
+      if (action === "accept") router.push(`/groups/${groupId}`);
+      else router.refresh();
+    } catch {
+      setError("Could not reach UniConnect. Please try again.");
+    } finally {
+      setSubmitting("");
+    }
+  }
+
+  return (
+    <div className="mt-5">
+      <div className="flex flex-wrap gap-3">
+        <button
+          type="button"
+          className="primary-button !min-h-10 !px-5 !py-2"
+          disabled={Boolean(submitting)}
+          onClick={() => void respond("accept")}
+        >
+          {submitting === "accept" ? "Accepting…" : "Accept invitation"}
+        </button>
+        <button
+          type="button"
+          className="secondary-button !min-h-10 !px-5 !py-2"
+          disabled={Boolean(submitting)}
+          onClick={() => void respond("decline")}
+        >
+          {submitting === "decline" ? "Declining…" : "Decline"}
+        </button>
+      </div>
+      {error && <p className="mt-3 text-sm text-red-300">{error}</p>}
+    </div>
+  );
+}
+
 export function JoinGroup({ id }: { id: string }) {
   const router = useRouter();
   return (

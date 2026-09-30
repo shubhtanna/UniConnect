@@ -10,13 +10,23 @@ import {
 
 export default async function Page({
   params,
+  searchParams,
 }: {
   params: Promise<{ groupId: string }>;
+  searchParams: Promise<{
+    invited?: string;
+    sent?: string;
+    failed?: string;
+  }>;
 }) {
   const user = await requirePageSession();
   const { groupId } = await params;
+  const invitationResult = await searchParams;
   const room = await getGroupRoom(user.id, groupId);
   if (!room) notFound();
+  const invitedCount = Number(invitationResult.invited ?? 0);
+  const sentCount = Number(invitationResult.sent ?? 0);
+  const failedCount = Number(invitationResult.failed ?? 0);
   return (
     <main className="grid-texture min-h-screen px-6 pb-28 pt-10">
       <div className="mx-auto max-w-4xl">
@@ -35,6 +45,15 @@ export default async function Page({
             </span>
           ))}
         </div>
+        {invitedCount > 0 && room.isOwner && (
+          <div className="mt-6 rounded-2xl border border-teal/30 bg-teal/5 px-5 py-4 text-sm leading-6">
+            Created {invitedCount} invitation{invitedCount === 1 ? "" : "s"}.
+            {sentCount > 0 &&
+              ` ${sentCount} email${sentCount === 1 ? " was" : "s were"} sent.`}
+            {failedCount > 0 &&
+              ` ${failedCount} email${failedCount === 1 ? " could" : "s could"} not be delivered, but the invitation remains available when that student signs in.`}
+          </div>
+        )}
         {room.isOwner && (
           <GroupOwnerActions
             id={groupId}
@@ -43,6 +62,43 @@ export default async function Page({
             tags={room.group.tags}
             access={room.group.access}
           />
+        )}
+        {room.isOwner && room.invitations.length > 0 && (
+          <section className="panel mt-6 p-6">
+            <div className="flex items-end justify-between gap-4">
+              <div>
+                <p className="eyebrow">Invitations</p>
+                <h2 className="mt-2 text-xl font-semibold">Delivery status</h2>
+              </div>
+              <p className="text-xs text-muted">
+                {room.invitations.length} invited
+              </p>
+            </div>
+            <div className="mt-4 divide-y divide-line">
+              {room.invitations.map((invitation) => (
+                <div
+                  key={invitation.id}
+                  className="flex flex-wrap items-center justify-between gap-3 py-3"
+                >
+                  <p className="break-all text-sm">{invitation.email}</p>
+                  <div className="flex gap-2 text-xs">
+                    <span className="rounded-full border border-line px-3 py-1 capitalize text-muted">
+                      {invitation.status}
+                    </span>
+                    <span
+                      className={`rounded-full border px-3 py-1 capitalize ${
+                        invitation.deliveryStatus === "failed"
+                          ? "border-red-400/30 text-red-300"
+                          : "border-teal/30 text-teal"
+                      }`}
+                    >
+                      Email {invitation.deliveryStatus}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
         )}
         {!room.isMember ? (
           <div className="panel mt-8 p-8 text-center">
