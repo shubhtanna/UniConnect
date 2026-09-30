@@ -114,3 +114,64 @@ export async function sendGroupInvitationEmail({
     `,
   });
 }
+
+export async function sendPlatformInvitationEmail({
+  email,
+  name,
+  platformUrl,
+}: {
+  email: string;
+  name?: string;
+  platformUrl: string;
+}) {
+  const env = getServerEnv();
+  if (!env.SMTP_HOST) {
+    if (env.NODE_ENV === "production") throw new Error("SMTP is not configured");
+    console.info(`[UniConnect development platform invitation] ${email}`);
+    return;
+  }
+
+  const greeting = name?.trim() ? `Hi ${name.trim()},` : "Hi,";
+  const safeGreeting = escapeHtml(greeting);
+  const safePlatformUrl = escapeHtml(platformUrl);
+  const subject = "Your UniConnect profile is ready — find the right people at MU";
+  const text = `${greeting}
+
+We are inviting you to try UniConnect, a private networking platform built for the Masters' Union community.
+
+Use UniConnect to discover classmates by skills, interests, projects, and goals; find collaborators with AI people search; join focused brainstorm groups; and share what you are building.
+
+To make onboarding easier, we prepared an initial profile using information from the cohort's Master CV collection. You can review, edit, add, or remove any information after signing in.
+
+Open UniConnect: ${platformUrl}
+
+Sign in with this Masters' Union email address. You will receive a one-time verification code; no password is required.
+
+UniConnect is an early-stage student project. Please share your honest feedback after exploring it.
+
+Shubh Tanna
+UniConnect`;
+
+  await getMailTransport().sendMail({
+    from: env.SMTP_FROM,
+    to: email,
+    subject,
+    text,
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:620px;margin:auto;padding:32px;color:#14251f;line-height:1.6">
+        <p style="font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:#174c3c;font-weight:700">UniConnect</p>
+        <p>${safeGreeting}</p>
+        <h1 style="font-size:28px;line-height:1.25;margin:14px 0">Your UniConnect profile is ready</h1>
+        <p>We are inviting you to try <strong>UniConnect</strong>, a private networking platform built for the Masters' Union community.</p>
+        <p>Use UniConnect to discover classmates by skills, interests, projects, and goals; find collaborators with AI people search; join focused brainstorm groups; and share what you are building.</p>
+        <p>To make onboarding easier, we prepared an initial profile using information from the cohort's Master CV collection. You can review, edit, add, or remove any information after signing in.</p>
+        <p style="margin:28px 0">
+          <a href="${safePlatformUrl}" style="display:inline-block;border-radius:999px;background:#174c3c;color:#fff;padding:13px 22px;text-decoration:none;font-weight:700">Open UniConnect</a>
+        </p>
+        <p>Sign in with this Masters' Union email address. You will receive a one-time verification code; no password is required.</p>
+        <p>UniConnect is an early-stage student project. Please share your honest feedback after exploring it.</p>
+        <p style="margin-top:28px">Shubh Tanna<br><strong>UniConnect</strong></p>
+      </div>
+    `,
+  });
+}
