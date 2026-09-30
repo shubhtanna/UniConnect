@@ -1,9 +1,13 @@
-import { Types } from "mongoose";
+import { Types, type HydratedDocument } from "mongoose";
 import { connectToDatabase } from "@/lib/db";
 import { getProfileSummaries } from "@/lib/profile-store";
 import { BrainstormGroup } from "@/models/BrainstormGroup";
 import { BrainstormMessage } from "@/models/BrainstormMessage";
-import { GroupInvitation } from "@/models/GroupInvitation";
+import {
+  GroupInvitation,
+  type GroupInvitationDocument,
+} from "@/models/GroupInvitation";
+import { User } from "@/models/User";
 import { sendGroupInvitationEmail } from "@/lib/email";
 import type { z } from "zod";
 import type {
@@ -30,23 +34,97 @@ export async function createGroup(
     memberIds: [userId],
   });
 
-  const invitationEmails = input.inviteEmails.filter(
-    (email) => email !== inviterEmail,
+  const invitationSummary = await inviteGroupMembers({
+    ownerId: userId,
+    inviterEmail,
+    origin,
+    groupId: group._id.toString(),
+    invitationEmails: input.inviteEmails,
+  });
+
+  return {
+    group,
+    invitationSummary: invitationSummary ?? {
+      created: 0,
+      sent: 0,
+      failed: 0,
+      skipped: 0,
+    },
+  };
+}
+
+export async function inviteGroupMembers({
+  ownerId,
+  inviterEmail,
+  origin,
+  groupId,
+  invitationEmails,
+}: {
+  ownerId: string;
+  inviterEmail: string;
+  origin: string;
+  groupId: string;
+  invitationEmails: string[];
+}) {
+  if (!Types.ObjectId.isValid(groupId)) return null;
+  await connectToDatabase();
+  const group = await BrainstormGroup.findOne({
+    _id: groupId,
+    createdBy: ownerId,
+    status: "active",
+  });
+  if (!group) return null;
+
+  const memberUsers = await User.find({ _id: { $in: group.memberIds } })
+    .select("email")
+    .lean();
+  const memberEmails = new Set(memberUsers.map((user) => user.email));
+  memberEmails.add(inviterEmail);
+
+  const candidateEmails = invitationEmails.filter(
+    (email) => !memberEmails.has(email),
   );
-  if (!invitationEmails.length) {
-    return {
-      group,
-      invitationSummary: { created: 0, sent: 0, failed: 0 },
-    };
+  const existingInvitations = await GroupInvitation.find({
+    groupId,
+    invitedEmail: { $in: candidateEmails },
+  });
+  const existingByEmail = new Map(
+    existingInvitations.map((invitation) => [
+      invitation.invitedEmail,
+      invitation,
+    ]),
+  );
+
+  const invitations: HydratedDocument<GroupInvitationDocument>[] = [];
+  let skipped = invitationEmails.length - candidateEmails.length;
+  for (const invitedEmail of candidateEmails) {
+    const existing = existingByEmail.get(invitedEmail);
+    if (existing?.status === "pending" || existing?.status === "accepted") {
+      skipped += 1;
+      continue;
+    }
+    if (existing) {
+      existing.status = "pending";
+      existing.deliveryStatus = "pending";
+      existing.invitedBy = new Types.ObjectId(ownerId);
+      existing.invitedUserId = undefined;
+      existing.respondedAt = undefined;
+      existing.sentAt = undefined;
+      await existing.save();
+      invitations.push(existing);
+      continue;
+    }
+    const invitation = await GroupInvitation.create({
+      groupId,
+      invitedEmail,
+      invitedBy: ownerId,
+    });
+    invitations.push(invitation);
   }
 
-  const invitations = await GroupInvitation.insertMany(
-    invitationEmails.map((invitedEmail) => ({
-      groupId: group._id,
-      invitedEmail,
-      invitedBy: userId,
-    })),
-  );
+  if (!invitations.length) {
+    return { created: 0, sent: 0, failed: 0, skipped };
+  }
 
   const deliveryResults = await Promise.allSettled(
     invitations.map(async (invitation) => {
@@ -78,12 +156,10 @@ export async function createGroup(
   }
 
   return {
-    group,
-    invitationSummary: {
-      created: invitations.length,
-      sent: invitations.length - failedInvitationIds.length,
-      failed: failedInvitationIds.length,
-    },
+    created: invitations.length,
+    sent: invitations.length - failedInvitationIds.length,
+    failed: failedInvitationIds.length,
+    skipped,
   };
 }
 

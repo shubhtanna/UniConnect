@@ -4,6 +4,7 @@ import { getGroupRoom } from "@/lib/group-store";
 import {
   GroupMessageActions,
   GroupOwnerActions,
+  InviteMembers,
   JoinGroup,
   MessageComposer,
 } from "@/components/groups/GroupActions";
@@ -63,6 +64,7 @@ export default async function Page({
             access={room.group.access}
           />
         )}
+        {room.isOwner && <InviteMembers groupId={groupId} />}
         {room.isOwner && room.invitations.length > 0 && (
           <section className="panel mt-6 p-6">
             <div className="flex items-end justify-between gap-4">

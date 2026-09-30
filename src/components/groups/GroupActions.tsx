@@ -62,6 +62,133 @@ export function InvitationActions({
   );
 }
 
+export function InviteMembers({ groupId }: { groupId: string }) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [result, setResult] = useState("");
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSubmitting(true);
+    setError("");
+    setResult("");
+    const form = event.currentTarget;
+    const values = new FormData(form);
+    const inviteEmails = String(values.get("inviteEmails"))
+      .split(/[\s,;]+/)
+      .map((email) => email.trim())
+      .filter(Boolean);
+
+    try {
+      const response = await fetch(`/api/groups/${groupId}/invitations`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ inviteEmails }),
+      });
+      const data = (await response.json()) as {
+        error?: string;
+        invitationSummary?: {
+          created: number;
+          sent: number;
+          failed: number;
+          skipped: number;
+        };
+      };
+      if (!response.ok || !data.invitationSummary) {
+        setError(data.error ?? "Could not send these invitations");
+        return;
+      }
+
+      const summary = data.invitationSummary;
+      const parts = [
+        summary.sent > 0
+          ? `${summary.sent} invitation email${summary.sent === 1 ? "" : "s"} sent`
+          : "",
+        summary.failed > 0
+          ? `${summary.failed} saved for in-app delivery after email failed`
+          : "",
+        summary.skipped > 0
+          ? `${summary.skipped} already invited or already a member`
+          : "",
+      ].filter(Boolean);
+      setResult(parts.join(" · ") || "No new invitations were needed.");
+      form.reset();
+      router.refresh();
+    } catch {
+      setError("Could not reach UniConnect. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <section className="panel mt-6 p-6">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <p className="eyebrow">Grow this group</p>
+          <h2 className="mt-2 text-xl font-semibold">Invite more members</h2>
+          <p className="mt-2 text-sm text-muted">
+            Add up to 20 official MU addresses at a time.
+          </p>
+        </div>
+        {!open && (
+          <button
+            type="button"
+            className="secondary-button !min-h-10 !px-5 !py-2"
+            onClick={() => setOpen(true)}
+          >
+            Add members
+          </button>
+        )}
+      </div>
+      {open && (
+        <form onSubmit={submit} className="mt-5">
+          <label className="grid gap-2">
+            <span className="text-sm text-white">MU email addresses</span>
+            <textarea
+              name="inviteEmails"
+              className="text-field min-h-24"
+              placeholder="name@mastersunion.org, another@mastersunion.org"
+              required
+            />
+            <span className="text-xs text-muted">
+              Separate addresses with commas, spaces, semicolons, or new lines.
+            </span>
+          </label>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <button className="primary-button" disabled={submitting}>
+              {submitting ? "Sending invitations…" : "Send invitations"}
+            </button>
+            <button
+              type="button"
+              className="secondary-button"
+              disabled={submitting}
+              onClick={() => {
+                setOpen(false);
+                setError("");
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
+      {result && (
+        <p className="mt-4 rounded-xl border border-teal/30 bg-teal/5 p-3 text-sm text-teal">
+          {result}
+        </p>
+      )}
+      {error && (
+        <p className="mt-4 rounded-xl border border-red-500/40 bg-red-950/40 p-3 text-sm text-red-200">
+          {error}
+        </p>
+      )}
+    </section>
+  );
+}
+
 export function JoinGroup({ id }: { id: string }) {
   const router = useRouter();
   return (

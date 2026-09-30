@@ -34,3 +34,10 @@ export const groupMessageSchema = z.object({ body: safeGroupText(1, 2000) });
 export const groupInvitationResponseSchema = z.object({
   action: z.enum(["accept", "decline"]),
 });
+export const groupInviteMembersSchema = z.object({
+  inviteEmails: z
+    .array(muEmailSchema)
+    .min(1, "Add at least one MU email address")
+    .max(20, "Invite at most 20 classmates at a time")
+    .transform((emails) => [...new Set(emails)]),
+});

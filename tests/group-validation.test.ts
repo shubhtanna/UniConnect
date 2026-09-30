@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   createGroupSchema,
+  groupInviteMembersSchema,
   groupInvitationResponseSchema,
   groupMessageSchema,
 } from "@/lib/group-validation";
@@ -59,6 +60,19 @@ test("brainstorm group invitations normalize duplicate emails and validate respo
   );
   assert.equal(
     groupInvitationResponseSchema.safeParse({ action: "ignore" }).success,
+    false,
+  );
+  assert.deepEqual(
+    groupInviteMembersSchema.parse({
+      inviteEmails: [
+        "NEW.MEMBER@MASTERSUNION.ORG",
+        "new.member@mastersunion.org",
+      ],
+    }).inviteEmails,
+    ["new.member@mastersunion.org"],
+  );
+  assert.equal(
+    groupInviteMembersSchema.safeParse({ inviteEmails: [] }).success,
     false,
   );
 });

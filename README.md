@@ -57,7 +57,7 @@ These three documents are maintained together. A feature is removed from `PENDIN
 - AI-assisted connection search
 - Interest tags and reverse “Who’s looking for you” matches
 - Named or anonymous profile-view preferences and 30-day viewer insights
-- Open or invite-only brainstorm groups with persistent discussions, emailed invitations, accept/decline controls, and owner-visible delivery status
+- Open or invite-only brainstorm groups with persistent discussions, emailed invitations during or after creation, accept/decline controls, and owner-visible delivery status
 - Community and Venture showcase feeds
 - Like and comment interactions, native/copy-link sharing, owner edit/delete controls, and reason-required reports
 - Server-side abusive-language and unsafe-link guardrails across feeds and groups
