@@ -6,6 +6,12 @@ const serverEnvSchema = z.object({
   MONGODB_DB: z.string().trim().min(1).default("uniconnect"),
   SESSION_SECRET: z.string().min(32, "SESSION_SECRET must be at least 32 characters"),
   OTP_PEPPER: z.string().min(32, "OTP_PEPPER must be at least 32 characters"),
+  TEST_ACCESS_ENABLED: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
+  TEST_ACCESS_SECRET: z.string().min(32).optional(),
+  TEST_ACCESS_EXPIRES_AT: z.string().datetime({ offset: true }).optional(),
   SMTP_HOST: z.string().optional(),
   SMTP_PORT: z.coerce.number().int().positive().default(587),
   SMTP_SECURE: z
@@ -39,6 +45,18 @@ const serverEnvSchema = z.object({
       code: z.ZodIssueCode.custom,
       path: ["DATABASE_MODE"],
       message: "In-memory storage is not allowed in production",
+    });
+  }
+
+  if (
+    env.TEST_ACCESS_ENABLED &&
+    (!env.TEST_ACCESS_SECRET || !env.TEST_ACCESS_EXPIRES_AT)
+  ) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["TEST_ACCESS_SECRET"],
+      message:
+        "TEST_ACCESS_SECRET and TEST_ACCESS_EXPIRES_AT are required when test access is enabled",
     });
   }
 

@@ -8,6 +8,11 @@ import { isPublicPath, postAuthRedirect } from "@/lib/navigation";
 import { isOtpExpired } from "@/lib/otp";
 import { completeProfileSchema } from "@/lib/profile-validation";
 import { muEmailSchema } from "@/lib/validation";
+import {
+  secureTokenMatches,
+  TEST_ACCESS_EMAIL,
+  testAccessHasExpired,
+} from "@/lib/test-access";
 
 test("MU domain validation accepts only the exact official domain", () => {
   assert.equal(muEmailSchema.parse(" Student@mastersunion.org "), "student@mastersunion.org");
@@ -25,7 +30,16 @@ test("authentication redirect rules remain deterministic", () => {
   assert.equal(postAuthRedirect(false), "/profile/setup");
   assert.equal(postAuthRedirect(true), "/dashboard");
   assert.equal(isPublicPath("/login"), true);
+  assert.equal(isPublicPath("/test-access"), true);
   assert.equal(isPublicPath("/feed"), false);
+});
+
+test("private tester access is fixed to one account and validates secrets and expiry", () => {
+  assert.equal(TEST_ACCESS_EMAIL, "shubh.tanna_pgpaias27@mastersunion.org");
+  assert.equal(secureTokenMatches("a".repeat(32), "a".repeat(32)), true);
+  assert.equal(secureTokenMatches("a".repeat(32), "b".repeat(32)), false);
+  assert.equal(testAccessHasExpired("2026-10-01T10:00:00.000Z", Date.parse("2026-10-01T10:00:01.000Z")), true);
+  assert.equal(testAccessHasExpired("2026-10-01T10:00:02.000Z", Date.parse("2026-10-01T10:00:01.000Z")), false);
 });
 
 test("profile and Spotlight payload validation rejects incomplete models", () => {

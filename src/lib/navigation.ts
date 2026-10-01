@@ -3,5 +3,10 @@ export function postAuthRedirect(isProfileComplete: boolean) {
 }
 
 export function isPublicPath(pathname: string) {
-  return pathname === "/" || pathname === "/login" || pathname === "/api/health";
+  return (
+    pathname === "/" ||
+    pathname === "/login" ||
+    pathname === "/test-access" ||
+    pathname === "/api/health"
+  );
 }
