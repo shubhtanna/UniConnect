@@ -100,6 +100,14 @@ export function getCloudinarySignedUrl(token: string, userId: string) {
       type: "authenticated",
       sign_url: true,
       secure: true,
+      // Serve right-sized, compressed images (WebP/AVIF where supported)
+      // instead of the original upload, which can be several megabytes.
+      ...(resourceType === "image" && {
+        transformation: [
+          { width: kind === "photos" ? 640 : 1600, crop: "limit" },
+          { quality: "auto", fetch_format: "auto" },
+        ],
+      }),
     });
   } catch {
     return null;

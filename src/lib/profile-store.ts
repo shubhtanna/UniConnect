@@ -199,13 +199,15 @@ export async function getSearchableProfiles(
   );
 }
 
+// The directory never ranks by embedding, so it skips the 1,536-number vectors
+// to keep the cached payload small as more cohorts join.
 export async function getDirectoryProfiles(
   limit = 1000,
 ): Promise<SearchableProfile[]> {
   if (usesMemoryStore()) {
     return [...memoryProfiles.values()]
       .slice(0, limit)
-      .map(toSearchableProfile);
+      .map((profile) => ({ ...toSearchableProfile(profile), resumeEmbedding: [] }));
   }
 
   await connectToDatabase();
@@ -218,10 +220,9 @@ export async function getDirectoryProfiles(
     .lean();
   const [profiles, preloadedProfiles] = await Promise.all([
     Profile.find({ userId: { $in: eligibleUsers.map((user) => user._id) } })
-      .select("+resumeEmbedding")
       .limit(limit)
       .lean(),
-    getPublishedPreloadedProfiles(limit),
+    getPublishedPreloadedProfiles(limit, undefined, false),
   ]);
   const claimedProfiles = profiles.map((profile) =>
     toSearchableProfile({
@@ -345,6 +346,7 @@ function toSearchableProfile(
 async function getPublishedPreloadedProfiles(
   limit: number,
   id?: string,
+  withEmbeddings = true,
 ): Promise<SearchableProfile[]> {
   const query: { status: "pending"; _id?: Types.ObjectId } = {
     status: "pending",
@@ -352,7 +354,7 @@ async function getPublishedPreloadedProfiles(
   if (id) query._id = new Types.ObjectId(id);
   const profiles = await PreloadedProfile.find(query)
     .select(
-      "name cohort skills interests workExperience education currentProject lookingFor +resumeEmbedding",
+      `name cohort skills interests workExperience education currentProject lookingFor${withEmbeddings ? " +resumeEmbedding" : ""}`,
     )
     .limit(limit)
     .lean();
@@ -366,7 +368,7 @@ async function getPublishedPreloadedProfiles(
       education: profile.education,
       currentProject: profile.currentProject,
       lookingFor: profile.lookingFor,
-      resumeEmbedding: profile.resumeEmbedding,
+      resumeEmbedding: profile.resumeEmbedding ?? [],
     }),
   );
 }

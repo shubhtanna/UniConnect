@@ -6,6 +6,10 @@ import { getConnectionProfile } from "@/lib/profile-store";
 import { requirePageSession } from "@/lib/auth";
 import { recordProfileView } from "@/lib/discovery-insights";
 
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "Student profile" };
+
 const FEATURED_SKILL_COUNT = 12;
 
 export default async function ConnectionProfilePage({

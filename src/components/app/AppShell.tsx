@@ -6,15 +6,18 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Logo } from "@/components/Logo";
 
 const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: "⌂" },
-  { href: "/profile", label: "My profile", icon: "◎" },
-  { href: "/connections?mode=browse", label: "Student directory", icon: "☷" },
-  { href: "/connections?mode=search", label: "AI people search", icon: "⌕" },
-  { href: "/insights", label: "Discovery insights", icon: "◇" },
-  { href: "/groups", label: "Brainstorm groups", icon: "#" },
-  { href: "/feed?type=community", label: "Community feed", icon: "◫" },
-  { href: "/feed?type=spotlight", label: "Venture showcase", icon: "✦" },
+  { href: "/dashboard", label: "Dashboard", short: "Home", icon: "⌂", mobilePrimary: true },
+  { href: "/profile", label: "My profile", short: "Profile", icon: "◎" },
+  { href: "/connections?mode=browse", label: "Student directory", short: "Directory", icon: "☷", mobilePrimary: true },
+  { href: "/connections?mode=search", label: "AI people search", short: "AI search", icon: "⌕", mobilePrimary: true },
+  { href: "/insights", label: "Discovery insights", short: "Insights", icon: "◇" },
+  { href: "/groups", label: "Brainstorm groups", short: "Groups", icon: "#" },
+  { href: "/feed?type=community", label: "Community feed", short: "Feed", icon: "◫", mobilePrimary: true },
+  { href: "/feed?type=spotlight", label: "Venture showcase", short: "Showcase", icon: "✦" },
 ];
+const DEFAULT_VIEWS = new Set(["browse", "community"]);
+const mobilePrimaryItems = navItems.filter((item) => item.mobilePrimary);
+const mobileMoreItems = navItems.filter((item) => !item.mobilePrimary);
 
 export function AppShell({
   children,
@@ -28,14 +31,26 @@ export function AppShell({
   const searchParams = useSearchParams();
   const query = searchParams.toString();
   const [pendingHref, setPendingHref] = useState("");
-  useEffect(() => setPendingHref(""), [pathname, query]);
+  const [moreOpen, setMoreOpen] = useState(false);
+  useEffect(() => {
+    setPendingHref("");
+    setMoreOpen(false);
+  }, [pathname, query]);
+  useEffect(() => {
+    if (!moreOpen) return;
+    const close = (event: KeyboardEvent) => event.key === "Escape" && setMoreOpen(false);
+    window.addEventListener("keydown", close);
+    return () => window.removeEventListener("keydown", close);
+  }, [moreOpen]);
   const isActive = (href: string) => {
     const [path, query] = href.split("?");
     if (pathname !== path && !pathname.startsWith(`${path}/`)) return false;
     if (!query) return true;
-    return [...new URLSearchParams(query)].every(
-      ([key, value]) => searchParams.get(key) === value,
-    );
+    // A missing parameter means the page's default view (browse / community).
+    return [...new URLSearchParams(query)].every(([key, value]) => {
+      const current = searchParams.get(key);
+      return current === value || (current === null && DEFAULT_VIEWS.has(value));
+    });
   };
   return (
     <div
@@ -123,11 +138,49 @@ export function AppShell({
       <div id="main-content" tabIndex={-1} className="md:pl-64">
         {children}
       </div>
+      {moreOpen && (
+        <div className="fixed inset-0 z-40 md:hidden">
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/60"
+            aria-label="Close menu"
+            onClick={() => setMoreOpen(false)}
+          />
+          <div
+            id="mobile-more-menu"
+            className="absolute inset-x-3 bottom-[calc(5.25rem+env(safe-area-inset-bottom))] rounded-2xl border border-line bg-elevated p-2 shadow-card"
+          >
+            <div className="grid grid-cols-2 gap-1">
+              {mobileMoreItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  prefetch
+                  onClick={() => {
+                    if (!isActive(item.href)) setPendingHref(item.href);
+                    setMoreOpen(false);
+                  }}
+                  aria-current={isActive(item.href) ? "page" : undefined}
+                  className={`flex min-h-12 items-center gap-3 rounded-xl px-3 text-sm font-medium ${isActive(item.href) ? "bg-teal/10 text-teal" : "text-ink hover:bg-white/5"}`}
+                >
+                  <span className="grid w-6 place-items-center text-lg" aria-hidden="true">
+                    {item.icon}
+                  </span>
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+            <p className="mt-2 truncate border-t border-line px-3 pt-3 text-xs text-muted">
+              Signed in as {email}
+            </p>
+          </div>
+        </div>
+      )}
       <nav
-        className="fixed inset-x-3 bottom-3 z-40 flex items-center gap-1 overflow-x-auto rounded-2xl border border-line bg-elevated/95 p-2 shadow-card backdrop-blur md:hidden"
+        className="fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-50 grid grid-cols-5 gap-1 rounded-2xl border border-line bg-elevated/95 p-1.5 shadow-card backdrop-blur md:hidden"
         aria-label="Mobile navigation"
       >
-        {navItems.map((item) => (
+        {mobilePrimaryItems.map((item) => (
           <Link
             key={item.href}
             href={item.href}
@@ -136,16 +189,26 @@ export function AppShell({
             onClick={() => {
               if (!isActive(item.href)) setPendingHref(item.href);
             }}
-            className={`flex min-w-[4.5rem] flex-col items-center gap-0.5 rounded-xl px-2 py-1.5 ${isActive(item.href) ? "bg-teal/10 text-teal" : "text-muted"}`}
+            className={`flex min-h-12 min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl px-1 ${isActive(item.href) ? "bg-teal/10 text-teal" : "text-muted"}`}
             aria-label={item.label}
             aria-current={isActive(item.href) ? "page" : undefined}
           >
-            <span className="text-lg">{item.icon}</span>
-            <span className="text-[10px] leading-tight">
-              {item.label.split(" ")[0]}
+            <span className="text-lg leading-none" aria-hidden="true">{item.icon}</span>
+            <span className="w-full truncate text-center text-[11px] leading-tight">
+              {item.short}
             </span>
           </Link>
         ))}
+        <button
+          type="button"
+          onClick={() => setMoreOpen((open) => !open)}
+          aria-expanded={moreOpen}
+          aria-controls="mobile-more-menu"
+          className={`flex min-h-12 min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl px-1 ${moreOpen || mobileMoreItems.some((item) => isActive(item.href)) ? "bg-teal/10 text-teal" : "text-muted"}`}
+        >
+          <span className="text-lg leading-none" aria-hidden="true">⋯</span>
+          <span className="text-[11px] leading-tight">More</span>
+        </button>
       </nav>
     </div>
   );

@@ -5,6 +5,10 @@ import { requirePageSession } from "@/lib/auth";
 import { getProfileByUserId } from "@/lib/profile-store";
 import { DeleteAccountPanel } from "@/components/profile/DeleteAccountPanel";
 
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "My profile" };
+
 export default async function ProfilePage() {
   const user = await requirePageSession();
   const profile = await getProfileByUserId(user.id);

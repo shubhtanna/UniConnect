@@ -84,7 +84,7 @@ export function LoginForm() {
       <h2 className="mt-4 text-4xl font-semibold tracking-[-0.04em] text-ink">
         {step === "email" ? "Sign in to continue" : "Check your inbox"}
       </h2>
-      <p className="mt-3 leading-7 text-ink/60">
+      <p className="mt-3 break-words leading-7 text-ink/60 [overflow-wrap:anywhere]">
         {step === "email"
           ? "Enter your official MU email and we'll send you a secure sign-in code."
           : status === "sending"

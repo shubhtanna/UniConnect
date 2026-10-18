@@ -13,7 +13,9 @@ export async function GET(
   if (parts[0] === "cloud" && parts[1]) {
     const signedUrl = getCloudinarySignedUrl(parts[1], user.id);
     if (!signedUrl) return NextResponse.json({ error: "File not found" }, { status: 404 });
-    return NextResponse.redirect(signedUrl);
+    const response = NextResponse.redirect(signedUrl);
+    response.headers.set("Cache-Control", "private, max-age=300");
+    return response;
   }
 
   const file = parts[0] ? await readStoredFile(parts[0], user.id) : null;

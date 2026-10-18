@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { requirePageSession } from "@/lib/auth";
 import { getGroupRoom } from "@/lib/group-store";
@@ -9,6 +10,8 @@ import {
   MessageComposer,
   RevokeInvitationButton,
 } from "@/components/groups/GroupActions";
+
+export const metadata: Metadata = { title: "Brainstorm group" };
 
 export default async function Page({
   params,

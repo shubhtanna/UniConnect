@@ -10,9 +10,13 @@ export { canonicalizeCohort };
 export const DIRECTORY_PAGE_SIZE = 12;
 const getCachedDirectoryProfiles = unstable_cache(
   () => getDirectoryProfiles(1000),
-  ["directory-profiles"],
+  ["directory-profiles-v2"],
   { revalidate: 30 },
 );
+
+export function getCachedDirectorySnapshot() {
+  return getCachedDirectoryProfiles();
+}
 
 export function filterDirectoryProfiles(
   profiles: SearchableProfile[],

@@ -27,6 +27,8 @@ test("authentication redirect rules remain deterministic", () => {
   assert.equal(isPublicPath("/login"), true);
   assert.equal(isPublicPath("/test-access"), false);
   assert.equal(isPublicPath("/privacy"), true);
+  assert.equal(isPublicPath("/opengraph-image"), true);
+  assert.equal(isPublicPath("/iconography"), false);
   assert.equal(isPublicPath("/feed"), false);
 });
 

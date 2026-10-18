@@ -3,6 +3,10 @@ import { getProfileByUserId } from "@/lib/profile-store";
 import { FeedClient } from "@/components/feed/FeedClient";
 import { listPosts } from "@/lib/feed-store";
 
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "Community feed" };
+
 export default async function FeedPage({
   searchParams,
 }: {
