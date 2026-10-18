@@ -67,14 +67,14 @@ test("directory filters are case-insensitive and do not mutate source profiles",
   assert.deepEqual(profiles, before);
 });
 
-test("all PGP AIAS year labels are treated as one cohort", () => {
+test("legacy PGP AIAS spellings map to the official cohort label", () => {
   for (const value of [
     "PGP AIAS",
     "PGP AIAS 2026",
-    "PGP AIAS 2026-27",
+    "pgp_aias_2026-27",
     "PGP, COHORT 2027",
   ]) {
-    assert.equal(canonicalizeCohort(value), "PGP AIAS");
+    assert.equal(canonicalizeCohort(value), "PGP AIAS 2026-27");
   }
   const result = filterDirectoryProfiles(profiles, {
     q: "",
@@ -113,3 +113,10 @@ function profile(
     resumeEmbedding: [],
   };
 }
+
+test("other programmes are never merged into PGP AIAS", () => {
+  for (const value of ["PGP TBM Cohort 2026", "PGP Rise 2027", "UG 2027"]) {
+    assert.notEqual(canonicalizeCohort(value), "PGP AIAS 2026-27");
+  }
+  assert.equal(canonicalizeCohort("  PGP   TBM 2026 "), "PGP TBM 2026");
+});

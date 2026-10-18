@@ -3,6 +3,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { requirePageSession } from "@/lib/auth";
 import { getProfileByUserId } from "@/lib/profile-store";
+import { DeleteAccountPanel } from "@/components/profile/DeleteAccountPanel";
 
 export default async function ProfilePage() {
   const user = await requirePageSession();
@@ -162,6 +163,7 @@ export default async function ProfilePage() {
             )}
           </DetailCard>
         </div>
+        <DeleteAccountPanel />
       </div>
     </main>
   );

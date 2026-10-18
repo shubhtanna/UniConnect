@@ -151,3 +151,9 @@ export function completeMemoryUserProfile(id: string) {
   const user = memoryStore.users.get(id);
   if (user) user.isProfileComplete = true;
 }
+
+export function deleteMemoryUser(id: string) {
+  const user = memoryStore.users.get(id);
+  if (user) memoryStore.challenges.delete(user.email);
+  memoryStore.users.delete(id);
+}

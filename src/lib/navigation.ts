@@ -6,7 +6,7 @@ export function isPublicPath(pathname: string) {
   return (
     pathname === "/" ||
     pathname === "/login" ||
-    pathname === "/test-access" ||
+    pathname === "/privacy" ||
     pathname === "/api/health"
   );
 }

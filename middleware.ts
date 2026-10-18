@@ -5,7 +5,6 @@ import { isPublicPath } from "@/lib/navigation";
 const AUTH_API_PATHS = new Set([
   "/api/auth/request-otp",
   "/api/auth/verify-otp",
-  "/api/auth/test-access",
 ]);
 
 export async function middleware(request: NextRequest) {

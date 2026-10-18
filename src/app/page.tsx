@@ -460,6 +460,12 @@ export default function HomePage() {
               >
                 Sign in
               </Link>
+              <Link
+                className="transition-colors hover:text-white"
+                href="/privacy"
+              >
+                Privacy
+              </Link>
               <span>© 2026 UniConnect · Verified MU students only</span>
             </div>
           </div>

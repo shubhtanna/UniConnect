@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isKnownCohort } from "@/lib/cohorts";
 
 export const MAX_PROFILE_SKILLS = 30;
 export const MAX_PROFILE_INTERESTS = 12;
@@ -54,7 +55,7 @@ const educationSchema = z.object({
 
 const profileFields = {
   name: z.string().trim().min(2, "Name is required").max(120),
-  cohort: z.string().trim().min(2, "Cohort is required").max(120),
+  cohort: z.string().trim().min(1, "Choose your cohort").refine(isKnownCohort, "Choose your cohort from the list"),
   skills: z.array(z.string()).transform(normalizeProfileSkills).pipe(
     z.array(z.string().min(1).max(60)).min(1, "Add at least one skill").max(MAX_PROFILE_SKILLS),
   ),

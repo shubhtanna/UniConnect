@@ -370,3 +370,9 @@ async function getPublishedPreloadedProfiles(
     }),
   );
 }
+
+export function deleteMemoryProfile(userId: string) {
+  const profile = memoryProfiles.get(userId) ?? null;
+  memoryProfiles.delete(userId);
+  return profile;
+}

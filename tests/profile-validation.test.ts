@@ -9,7 +9,7 @@ import { extractedProfileSchema } from "@/lib/resume";
 function profile() {
   return {
     name: "Test Student", profilePhotoUrl: "/api/files/photo", resumeUrl: "/api/files/resume",
-    cohort: "PGP 2026", skills: ["React"], workExperience: [], education: [],
+    cohort: "PGP AIAS 2026-27", skills: ["React"], workExperience: [], education: [],
     currentProject: "", lookingFor: "Find collaborators", linkedinUrl: "",
     contactLink: "test@example.com", fieldsFilledManually: [],
   };

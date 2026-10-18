@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from "fs/promises";
+import { mkdir, readFile, rm, writeFile } from "fs/promises";
 import path from "path";
 import { randomUUID } from "crypto";
 import { v2 as cloudinary } from "cloudinary";
@@ -104,4 +104,34 @@ export function getCloudinarySignedUrl(token: string, userId: string) {
   } catch {
     return null;
   }
+}
+
+// Removes a file this user uploaded. URLs owned by someone else are ignored.
+export async function deleteStoredFile(url: string, ownerId: string) {
+  const env = getServerEnv();
+  const localMatch = /^\/api\/files\/([0-9a-f-]{36})$/.exec(url);
+  if (localMatch) {
+    const file = localFiles.get(localMatch[1]);
+    if (!file || file.ownerId !== ownerId) return;
+    await rm(file.path, { force: true });
+    localFiles.delete(localMatch[1]);
+    return;
+  }
+
+  const cloudMatch = /^\/api\/files\/cloud\/([A-Za-z0-9_-]+)$/.exec(url);
+  if (!cloudMatch || env.STORAGE_MODE !== "cloudinary") return;
+  const [resourceType, publicId, fileOwnerId] = Buffer.from(cloudMatch[1], "base64url")
+    .toString("utf8")
+    .split(":", 4);
+  if (!resourceType || !publicId || fileOwnerId !== ownerId) return;
+  cloudinary.config({
+    cloud_name: env.CLOUDINARY_CLOUD_NAME,
+    api_key: env.CLOUDINARY_API_KEY,
+    api_secret: env.CLOUDINARY_API_SECRET,
+  });
+  await cloudinary.uploader.destroy(publicId, {
+    resource_type: resourceType,
+    type: "authenticated",
+    invalidate: true,
+  });
 }

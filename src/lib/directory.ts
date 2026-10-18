@@ -3,6 +3,9 @@ import type { DirectoryResponse } from "@/lib/directory-types";
 import type { DirectoryQuery } from "@/lib/directory-validation";
 import { getDirectoryProfiles } from "@/lib/profile-store";
 import { unstable_cache } from "next/cache";
+import { canonicalizeCohort } from "@/lib/cohorts";
+
+export { canonicalizeCohort };
 
 export const DIRECTORY_PAGE_SIZE = 12;
 const getCachedDirectoryProfiles = unstable_cache(
@@ -92,20 +95,6 @@ export async function browseDirectory(
 
 function normalize(value: string) {
   return value.trim().toLocaleLowerCase();
-}
-
-export function canonicalizeCohort(value: string) {
-  const cleaned = value
-    .trim()
-    .replace(/[_,-]+/g, " ")
-    .replace(/\s+/g, " ");
-  const normalized = cleaned.toLocaleLowerCase();
-  if (
-    /\bpgp\b/.test(normalized) &&
-    (/\baias\b/.test(normalized) || /\bcohort\b/.test(normalized))
-  )
-    return "PGP AIAS";
-  return cleaned;
 }
 
 function uniqueSorted(values: string[]) {

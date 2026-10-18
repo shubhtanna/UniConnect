@@ -22,7 +22,7 @@ export default async function ProfileSetupPage({ searchParams }: { searchParams:
           <form action="/api/auth/sign-out" method="post"><button type="submit" className="text-sm font-semibold text-muted hover:text-ink">Sign out</button></form>
         </div>
       </header>
-      <ProfileSetupForm initialProfile={profile} />
+      <ProfileSetupForm initialProfile={profile} email={user.email} />
     </main>
   );
 }

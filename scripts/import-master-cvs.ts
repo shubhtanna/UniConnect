@@ -4,6 +4,7 @@ import { randomUUID } from "crypto";
 import { z } from "zod";
 import mongoose from "mongoose";
 import { muEmailSchema } from "@/lib/validation";
+import { isKnownCohort } from "@/lib/cohorts";
 import { matchesResumeSignature } from "@/lib/file-signatures";
 import {
   extractProfileFieldsLocally,
@@ -31,7 +32,7 @@ const entrySchema = z.object({
   email: muEmailSchema,
   resume: z.string().trim().min(1),
   name: z.string().trim().min(2).max(120).optional(),
-  cohort: z.string().trim().min(2).max(120).optional(),
+  cohort: z.string().trim().refine(isKnownCohort, "Cohort must be one of the official labels in src/lib/cohorts.ts").optional(),
   lookingFor: z.string().trim().min(2).max(500).optional(),
   linkedinUrl: z.union([z.literal(""), z.string().url().max(300)]).optional(),
   skills: z.array(z.string().trim().min(1).max(60)).min(1).max(30).optional(),
@@ -42,7 +43,7 @@ const entrySchema = z.object({
 
 const manifestSchema = z.object({
   batchId: z.string().trim().min(2).max(100).default(() => randomUUID()),
-  defaultCohort: z.string().trim().min(2).max(120),
+  defaultCohort: z.string().trim().refine(isKnownCohort, "Cohort must be one of the official labels in src/lib/cohorts.ts"),
   defaultLookingFor: z.string().trim().min(2).max(500)
     .default("Open to meeting like-minded people and exploring opportunities at MU"),
   profiles: z.array(entrySchema).min(1).max(200),

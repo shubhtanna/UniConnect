@@ -49,6 +49,13 @@ export default function LoginPage() {
             ← Back to home
           </Link>
           <LoginForm />
+          <p className="mt-6 text-center text-xs text-muted">
+            By signing in you agree to how we handle your data, described in our{" "}
+            <Link href="/privacy" className="underline underline-offset-4 hover:text-ink">
+              privacy notice
+            </Link>
+            .
+          </p>
         </div>
       </section>
     </main>

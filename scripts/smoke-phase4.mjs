@@ -44,7 +44,7 @@ await call("/api/profile/complete", {
     name: "Phase Four Student",
     profilePhotoUrl: photo.body.url,
     resumeUrl: "/api/files/smoke-resume",
-    cohort: "PGP TBM 2026",
+    cohort: "PGP AIAS 2026-27",
     skills: ["Community Building", "Product Management"],
     workExperience: [],
     education: [],

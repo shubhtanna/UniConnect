@@ -3,6 +3,7 @@
 import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { canonicalizeCohort, COHORT_LABELS, cohortFromEmail, isKnownCohort } from "@/lib/cohorts";
 import type { Education, ProfileInput, StoredProfile, WorkExperience } from "@/lib/profile-types";
 import {
   completeProfileSchema, preloadedProfileUpdateSchema, MAX_PROFILE_INTERESTS, MAX_PROFILE_SKILLS,
@@ -27,15 +28,17 @@ async function upload(url: string, file: File) {
   return result;
 }
 
-export function ProfileSetupForm({ initialProfile }: { initialProfile: StoredProfile | null }) {
+export function ProfileSetupForm({ initialProfile, email }: { initialProfile: StoredProfile | null; email: string }) {
   const router = useRouter();
+  const storedCohort = canonicalizeCohort(initialProfile?.cohort ?? "");
+  const initialCohort = isKnownCohort(storedCohort) ? storedCohort : cohortFromEmail(email);
   const initial: FormState = initialProfile ? {
     name: initialProfile.name, profilePhotoUrl: initialProfile.profilePhotoUrl, resumeUrl: initialProfile.resumeUrl,
-    cohort: initialProfile.cohort, skills: initialProfile.skills, interests: initialProfile.interests ?? [], workExperience: initialProfile.workExperience,
+    cohort: initialCohort, skills: initialProfile.skills, interests: initialProfile.interests ?? [], workExperience: initialProfile.workExperience,
     education: initialProfile.education, currentProject: initialProfile.currentProject, lookingFor: initialProfile.lookingFor,
     linkedinUrl: initialProfile.linkedinUrl, contactLink: initialProfile.contactLink,
     fieldsFilledManually: initialProfile.fieldsFilledManually,
-  } : emptyForm;
+  } : { ...emptyForm, cohort: initialCohort };
   const [step, setStep] = useState(initialProfile ? 3 : 1);
   const [form, setForm] = useState<FormState>(initial);
   const [photoPreview, setPhotoPreview] = useState(initialProfile?.profilePhotoUrl ?? "");
@@ -191,7 +194,7 @@ function ReviewForm({ form, setForm, skillsText, setSkillsText, skillCount, inte
     <div className="flex flex-col gap-2 border-b border-line pb-6 sm:flex-row sm:items-end sm:justify-between"><div><p className="eyebrow">Final review</p><h2 className="mt-2 text-2xl font-semibold">Make it sound like you.</h2></div>{form.fieldsFilledManually.length > 0 && <span className="text-xs text-amber">Review the details extracted from your resume</span>}</div>
     <div className="mt-7 grid gap-6 sm:grid-cols-2">
       <TextInput {...feedback("name")} label="Full name" value={form.name} onChange={(value) => field("name", value)} required />
-      <TextInput {...feedback("cohort")} label="Cohort / programme" value={form.cohort} onChange={(value) => field("cohort", value)} placeholder="PGP TBM, Cohort 2026" required />
+      <CohortSelect {...feedback("cohort")} value={form.cohort} onChange={(value) => field("cohort", value)} />
       <div className="sm:col-span-2"><TextInput {...feedback("skills")} label="Skills" value={skillsText} onChange={setSkillsText} placeholder="Product, Figma, Growth, Python" hint={`${skillCount} / ${MAX_PROFILE_SKILLS} unique skills. Separate with commas; duplicates count once. If over the limit, remove the skills you do not want to keep.`} required /></div>
       <div className="sm:col-span-2"><TextInput {...feedback("interests")} label="Interests" value={interestsText} onChange={setInterestsText} placeholder="Fintech, weddings, climate, D2C" hint={`${interestCount} / ${MAX_PROFILE_INTERESTS} interests. Add topics you genuinely want classmates to find you through.`} /></div>
       <div className="sm:col-span-2"><TextArea {...feedback("currentProject")} label="Current project" value={form.currentProject} onChange={(value) => field("currentProject", value)} placeholder="What are you building or exploring right now?" /></div>
@@ -250,6 +253,17 @@ function TextInput({ field, error, label, value, onChange, placeholder, required
   return <div><label htmlFor={id} className="field-label">{label}</label>
     <input id={id} name={field} className={`text-field scroll-mt-8 ${error ? "!border-red-400/70" : ""}`} type={type} value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} required={required} aria-invalid={Boolean(error)} aria-describedby={[hint && `${id}-hint`, error && `${id}-error`].filter(Boolean).join(" ") || undefined} />
     {hint && <p id={`${id}-hint`} className="mt-2 text-xs text-muted">{hint}</p>}<FieldError field={field} error={error} />
+  </div>;
+}
+
+function CohortSelect({ field, error, value, onChange }: { field: string; error?: string; value: string; onChange: (value: string) => void }) {
+  const id = profileFieldId(field);
+  return <div><label htmlFor={id} className="field-label">Cohort / programme</label>
+    <select id={id} name={field} className={`text-field scroll-mt-8 ${error ? "!border-red-400/70" : ""}`} value={value} onChange={(event) => onChange(event.target.value)} required aria-invalid={Boolean(error)} aria-describedby={`${id}-hint${error ? ` ${id}-error` : ""}`}>
+      <option value="">Choose your cohort</option>
+      {COHORT_LABELS.map((label) => <option key={label} value={label}>{label}</option>)}
+    </select>
+    <p id={`${id}-hint`} className="mt-2 text-xs text-muted">Cohort not listed? Ask the UniConnect team to add it before you continue.</p><FieldError field={field} error={error} />
   </div>;
 }
 
