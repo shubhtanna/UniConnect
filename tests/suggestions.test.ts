@@ -5,7 +5,7 @@ import { suggestClassmates } from "@/lib/suggestions";
 
 function person(userId: string, name: string, skills: string[], interests: string[]): SearchableProfile {
   return {
-    userId, name, profilePhotoUrl: "", cohort: "PGP AIAS 2026-27", skills, interests,
+    userId, name, profilePhotoUrl: "", cohort: "PGP AIAS 27", skills, interests,
     workExperience: [], education: [], currentProject: "", lookingFor: "", linkedinUrl: "",
     contactLink: "", resumeEmbedding: [],
   };

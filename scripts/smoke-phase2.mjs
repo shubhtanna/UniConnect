@@ -104,7 +104,7 @@ const profileInput = {
     name: extracted.name || "Phase Two Student",
     profilePhotoUrl: photo.body.url,
     resumeUrl: pdfResume.body.url,
-    cohort: "PGP AIAS 2026-27",
+    cohort: "PGP AIAS 27",
     skills: extracted.skills.length ? extracted.skills : ["Product Management"],
     workExperience: [],
     education: [],

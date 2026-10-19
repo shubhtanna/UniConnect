@@ -3,7 +3,7 @@
 import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { canonicalizeCohort, COHORT_LABELS, cohortFromEmail, isKnownCohort } from "@/lib/cohorts";
+import { canonicalizeCohort, COHORT_GROUPS, cohortFromEmail, isKnownCohort } from "@/lib/cohorts";
 import type { Education, ProfileInput, StoredProfile, WorkExperience } from "@/lib/profile-types";
 import {
   completeProfileSchema, preloadedProfileUpdateSchema, MAX_PROFILE_INTERESTS, MAX_PROFILE_SKILLS,
@@ -261,9 +261,13 @@ function CohortSelect({ field, error, value, onChange }: { field: string; error?
   return <div><label htmlFor={id} className="field-label">Cohort / programme</label>
     <select id={id} name={field} className={`text-field scroll-mt-8 ${error ? "!border-red-400/70" : ""}`} value={value} onChange={(event) => onChange(event.target.value)} required aria-invalid={Boolean(error)} aria-describedby={`${id}-hint${error ? ` ${id}-error` : ""}`}>
       <option value="">Choose your cohort</option>
-      {COHORT_LABELS.map((label) => <option key={label} value={label}>{label}</option>)}
+      {COHORT_GROUPS.map((group) => (
+        <optgroup key={group.programme} label={group.programme}>
+          {group.cohorts.map((cohort) => <option key={cohort.label} value={cohort.label}>{cohort.label}</option>)}
+        </optgroup>
+      ))}
     </select>
-    <p id={`${id}-hint`} className="mt-2 text-xs text-muted">Cohort not listed? Ask the UniConnect team to add it before you continue.</p><FieldError field={field} error={error} />
+    <p id={`${id}-hint`} className="mt-2 text-xs text-muted">Grouped by programme. Not listed? Ask the UniConnect team to add your cohort.</p><FieldError field={field} error={error} />
   </div>;
 }
 

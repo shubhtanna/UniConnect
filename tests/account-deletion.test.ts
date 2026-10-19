@@ -13,7 +13,7 @@ test("deleting an account removes the user and profile in memory mode", async ()
 
   const user = await upsertVerifiedUser("delete.me_pgpaias27@mastersunion.org");
   await saveProfile(user.id, {
-    name: "Delete Me", profilePhotoUrl: "", resumeUrl: "", cohort: "PGP AIAS 2026-27",
+    name: "Delete Me", profilePhotoUrl: "", resumeUrl: "", cohort: "PGP AIAS 27",
     skills: ["Python"], interests: [], workExperience: [], education: [], currentProject: "",
     lookingFor: "Collaborators", linkedinUrl: "", contactLink: "", fieldsFilledManually: [],
     resumeEmbedding: [],

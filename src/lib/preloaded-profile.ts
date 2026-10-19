@@ -1,3 +1,4 @@
+import { canonicalizeCohort } from "@/lib/cohorts";
 import { connectToDatabase } from "@/lib/db";
 import type {
   Education,
@@ -39,7 +40,7 @@ export function toClaimedProfileData(
     name: preloaded.name,
     profilePhotoUrl: "",
     resumeUrl: "",
-    cohort: preloaded.cohort,
+    cohort: canonicalizeCohort(preloaded.cohort),
     skills: preloaded.skills,
     interests: preloaded.interests ?? [],
     workExperience: preloaded.workExperience,
@@ -73,7 +74,7 @@ export function toPublishedPreloadedProfile(
     profileState: "unclaimed",
     name: preloaded.name,
     profilePhotoUrl: "",
-    cohort: preloaded.cohort,
+    cohort: canonicalizeCohort(preloaded.cohort),
     skills: preloaded.skills,
     interests: preloaded.interests ?? [],
     workExperience: preloaded.workExperience,
@@ -231,7 +232,7 @@ export async function claimPreloadedProfile(userId: string, email: string) {
       const data = toClaimedProfileData({
         email: preloaded.email,
         sourceResumeName: preloaded.sourceResumeName,
-        cohort: preloaded.cohort,
+        cohort: canonicalizeCohort(preloaded.cohort),
         name: preloaded.name,
         skills: preloaded.skills,
         interests: preloaded.interests ?? [],

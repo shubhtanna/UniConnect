@@ -9,6 +9,7 @@ import { PreloadedProfile } from "@/models/PreloadedProfile";
 import { User } from "@/models/User";
 import { completeMemoryUserProfile } from "@/lib/auth-store";
 import { toPublishedPreloadedProfile } from "@/lib/preloaded-profile";
+import { canonicalizeCohort } from "@/lib/cohorts";
 
 const globalWithProfiles = globalThis as typeof globalThis & {
   uniconnectMemoryProfiles?: Map<string, StoredProfile>;
@@ -83,7 +84,7 @@ export async function getProfileByUserId(
     name: profile.name,
     profilePhotoUrl: profile.profilePhotoUrl,
     resumeUrl: profile.resumeUrl,
-    cohort: profile.cohort,
+    cohort: canonicalizeCohort(profile.cohort),
     skills: profile.skills,
     interests: profile.interests ?? [],
     workExperience: profile.workExperience,
@@ -136,7 +137,7 @@ export async function getProfileSummaries(userIds: string[]) {
           userId: id,
           name: profile.name,
           profilePhotoUrl: profile.profilePhotoUrl,
-          cohort: profile.cohort,
+          cohort: canonicalizeCohort(profile.cohort),
         };
       }
       return summaries;
@@ -154,7 +155,7 @@ export async function getProfileSummaries(userIds: string[]) {
         userId: id,
         name: profile.name,
         profilePhotoUrl: profile.profilePhotoUrl,
-        cohort: profile.cohort,
+        cohort: canonicalizeCohort(profile.cohort),
       };
       return summaries;
     },
@@ -329,7 +330,7 @@ function toSearchableProfile(
     profileState: profile.profileState ?? "claimed",
     name: profile.name,
     profilePhotoUrl: profile.profilePhotoUrl,
-    cohort: profile.cohort,
+    cohort: canonicalizeCohort(profile.cohort),
     skills: profile.skills,
     interests: profile.interests ?? [],
     workExperience: profile.workExperience,
@@ -361,7 +362,7 @@ async function getPublishedPreloadedProfiles(
   return profiles.map((profile) =>
     toPublishedPreloadedProfile(profile._id.toString(), {
       name: profile.name,
-      cohort: profile.cohort,
+      cohort: canonicalizeCohort(profile.cohort),
       skills: profile.skills,
       interests: profile.interests ?? [],
       workExperience: profile.workExperience,
