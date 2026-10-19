@@ -58,13 +58,14 @@ test("nested education and work errors retain indexed paths and human labels", (
     workExperience: [{ company: "", role: "Engineer", duration: "2026", description: "" }],
     education: [
       { institution: "University", degree: "BTech", year: "2024" },
-      { institution: "MU", degree: "PGP", year: "" },
+      { institution: "MU", degree: "", year: "" },
     ],
   });
   assert.match(result.fieldErrors["workExperience.0.company"], /Work experience entry 1 — Company: This field is required/);
-  assert.match(result.fieldErrors["education.1.year"], /Education entry 2 — Year: This field is required/);
+  assert.match(result.fieldErrors["education.1.degree"], /Education entry 2 — Degree: This field is required/);
+  assert.equal(result.fieldErrors["education.1.year"], undefined);
   assert.equal(Object.keys(result.fieldErrors).length, 2);
-  assert.equal(profileFieldId("education.1.year"), "profile-education-1-year");
+  assert.equal(profileFieldId("education.1.degree"), "profile-education-1-degree");
 });
 
 test("multiple errors, long skills and invalid contacts identify their fields", () => {
@@ -113,4 +114,35 @@ test("missing uploads and oversized sections have understandable field errors", 
   assert.match(result.fieldErrors.profilePhotoUrl, /^Profile photo: Upload/);
   assert.match(result.fieldErrors.resumeUrl, /^Resume: Upload/);
   assert.match(result.fieldErrors.education, /^Education: Keep up to 20 entries/);
+});
+
+test("LinkedIn and contact links without https are accepted and normalized", async () => {
+  const { withHttps } = await import("@/lib/profile-validation");
+  assert.equal(withHttps("www.linkedin.com/in/shubhtanna"), "https://www.linkedin.com/in/shubhtanna");
+  assert.equal(withHttps("linkedin.com/in/x "), "https://linkedin.com/in/x");
+  assert.equal(withHttps("https://linkedin.com/in/x"), "https://linkedin.com/in/x");
+  assert.equal(withHttps("me@example.com"), "me@example.com");
+  assert.equal(withHttps("mailto:me@example.com"), "mailto:me@example.com");
+  assert.equal(withHttps("not a link"), "not a link");
+  const parsed = completeProfileSchema.parse({ ...profile(), linkedinUrl: "www.linkedin.com/in/shubhtanna", contactLink: "wa.me/919999999999" });
+  assert.equal(parsed.linkedinUrl, "https://www.linkedin.com/in/shubhtanna");
+  assert.equal(parsed.contactLink, "https://wa.me/919999999999");
+});
+
+test("resume extraction tolerates nulls, alternative keys and empty rows", () => {
+  const parsed = extractedProfileSchema.parse({
+    name: null,
+    skills: ["Python", 3, "python"],
+    workExperience: [
+      { title: "Growth Intern", organization: "Acme", dates: null },
+      { company: "", role: "" },
+    ],
+    education: [{ school: "Example University", degree: "BBA", year: null }],
+    currentProject: null,
+  });
+  assert.equal(parsed.name, "");
+  assert.deepEqual(parsed.skills, ["Python"]);
+  assert.deepEqual(parsed.workExperience, [{ company: "Acme", role: "Growth Intern", duration: "", description: "" }]);
+  assert.deepEqual(parsed.education, [{ institution: "Example University", degree: "BBA", year: "" }]);
+  assert.equal(completeProfileSchema.safeParse({ ...profile(), workExperience: parsed.workExperience, education: parsed.education }).success, true);
 });

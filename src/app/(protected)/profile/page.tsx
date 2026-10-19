@@ -138,7 +138,7 @@ export default async function ProfilePage() {
                 >
                   <p className="font-semibold">{item.role}</p>
                   <p className="mt-1 text-sm text-muted">
-                    {item.company} · {item.duration}
+                    {item.company}{item.duration ? ` · ${item.duration}` : ""}
                   </p>
                   <p className="mt-2 text-sm leading-6 text-white/70">
                     {item.description}
@@ -158,7 +158,7 @@ export default async function ProfilePage() {
                 >
                   <p className="font-semibold">{item.degree}</p>
                   <p className="mt-1 text-sm text-muted">
-                    {item.institution} · {item.year}
+                    {item.institution}{item.year ? ` · ${item.year}` : ""}
                   </p>
                 </div>
               ))

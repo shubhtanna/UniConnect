@@ -199,7 +199,7 @@ function ReviewForm({ form, setForm, skillsText, setSkillsText, skillCount, inte
       <div className="sm:col-span-2"><TextInput {...feedback("interests")} label="Interests" value={interestsText} onChange={setInterestsText} placeholder="Fintech, weddings, climate, D2C" hint={`${interestCount} / ${MAX_PROFILE_INTERESTS} interests. Add topics you genuinely want classmates to find you through.`} /></div>
       <div className="sm:col-span-2"><TextArea {...feedback("currentProject")} label="Current project" value={form.currentProject} onChange={(value) => field("currentProject", value)} placeholder="What are you building or exploring right now?" /></div>
       <div className="sm:col-span-2"><TextArea {...feedback("lookingFor")} label="What are you looking for?" value={form.lookingFor} onChange={(value) => field("lookingFor", value)} placeholder="Co-founder, mentor, user feedback…" required /></div>
-      <TextInput {...feedback("linkedinUrl")} label="LinkedIn URL" value={form.linkedinUrl} onChange={(value) => field("linkedinUrl", value)} placeholder="https://linkedin.com/in/..." type="url" />
+      <TextInput {...feedback("linkedinUrl")} label="LinkedIn URL" value={form.linkedinUrl} onChange={(value) => field("linkedinUrl", value)} placeholder="linkedin.com/in/your-name" type="text" />
       <TextInput {...feedback("contactLink")} label="Contact link or email" value={form.contactLink} onChange={(value) => field("contactLink", value)} placeholder="mailto:you@... or https://wa.me/..." required={!isPreloaded} hint={isPreloaded ? "Optional until you choose how other verified students can contact you." : undefined} />
     </div>
     <ExperienceEditor errors={errors} items={form.workExperience} onChange={(items) => setForm((current) => ({ ...current, workExperience: items }))} />
@@ -215,7 +215,7 @@ function ExperienceEditor({ items, onChange, errors }: { items: WorkExperience[]
     <FieldError field="workExperience" error={errors.workExperience} />
     <div className="mt-4 space-y-4">{items.map((item, index) => <div key={index} className="grid gap-3 rounded-xl border border-line bg-app/40 p-4 sm:grid-cols-3">
       <p className="text-xs text-muted sm:col-span-3">Work experience entry {index + 1}</p>
-      {(["company", "role", "duration"] as const).map((key) => <TextInput key={key} field={`workExperience.${index}.${key}`} error={errors[`workExperience.${index}.${key}`]} label={{ company: "Company", role: "Role", duration: "Duration" }[key]} value={item[key]} onChange={(value) => update(index, key, value)} required />)}
+      {(["company", "role", "duration"] as const).map((key) => <TextInput key={key} field={`workExperience.${index}.${key}`} error={errors[`workExperience.${index}.${key}`]} label={{ company: "Company", role: "Role", duration: "Duration (optional)" }[key]} value={item[key]} onChange={(value) => update(index, key, value)} required={key !== "duration"} />)}
       <div className="sm:col-span-3"><TextArea field={`workExperience.${index}.description`} error={errors[`workExperience.${index}.description`]} label="Description" value={item.description} onChange={(value) => update(index, "description", value)} /></div>
       <button type="button" aria-label={`Remove work experience entry ${index + 1}`} className="justify-self-start text-xs text-muted hover:text-red-300" onClick={() => onChange(items.filter((_, itemIndex) => itemIndex !== index))}>Remove</button>
     </div>)}</div>
@@ -229,7 +229,7 @@ function EducationEditor({ items, onChange, errors }: { items: Education[]; onCh
     <FieldError field="education" error={errors.education} />
     <div className="mt-4 space-y-4">{items.map((item, index) => <div key={index} className="grid gap-3 rounded-xl border border-line bg-app/40 p-4 sm:grid-cols-3">
       <p className="text-xs text-muted sm:col-span-3">Education entry {index + 1}</p>
-      {(["institution", "degree", "year"] as const).map((key) => <TextInput key={key} field={`education.${index}.${key}`} error={errors[`education.${index}.${key}`]} label={{ institution: "Institution", degree: "Degree", year: "Year" }[key]} value={item[key]} onChange={(value) => update(index, key, value)} required />)}
+      {(["institution", "degree", "year"] as const).map((key) => <TextInput key={key} field={`education.${index}.${key}`} error={errors[`education.${index}.${key}`]} label={{ institution: "Institution", degree: "Degree", year: "Year (optional)" }[key]} value={item[key]} onChange={(value) => update(index, key, value)} required={key !== "year"} />)}
       <button type="button" aria-label={`Remove education entry ${index + 1}`} className="justify-self-start text-xs text-muted hover:text-red-300" onClick={() => onChange(items.filter((_, itemIndex) => itemIndex !== index))}>Remove</button>
     </div>)}</div>
   </section>;

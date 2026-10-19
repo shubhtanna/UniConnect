@@ -32,25 +32,36 @@ const httpUrl = z.string().url().max(300).refine((value) => {
   } catch { return false; }
 }, "Use an http or https link");
 
-const contactLink = z.string().trim().min(3, "A contact link or email is required").max(300).refine((value) => {
+// People paste "www.linkedin.com/in/name" or "linkedin.com/in/name"; add the
+// missing https:// instead of rejecting a link that is otherwise fine.
+export function withHttps(value: unknown) {
+  if (typeof value !== "string") return value;
+  const trimmed = value.trim();
+  if (!trimmed || /^[a-z][a-z0-9+.-]*:/i.test(trimmed) || trimmed.includes("@")) return trimmed;
+  return /^[^\s/]+\.[a-z]{2,}(\/|$)/i.test(trimmed) ? `https://${trimmed}` : trimmed;
+}
+
+const optionalWebLink = z.preprocess(withHttps, z.union([z.literal(""), httpUrl]));
+
+const contactLink = z.preprocess(withHttps, z.string().trim().min(3, "A contact link or email is required").max(300).refine((value) => {
   if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return true;
   try {
     const url = new URL(value);
     return url.protocol === "https:" || url.protocol === "http:" || (url.protocol === "mailto:" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(url.pathname));
   } catch { return false; }
-}, "Use an email, mailto link, or secure web link");
+}, "Use an email, mailto link, or secure web link"));
 
 const workExperienceSchema = z.object({
   company: z.string().trim().min(1).max(120),
   role: z.string().trim().min(1).max(120),
-  duration: z.string().trim().min(1).max(100),
+  duration: z.string().trim().max(100).default(""),
   description: z.string().trim().max(1000).default(""),
 });
 
 const educationSchema = z.object({
   institution: z.string().trim().min(1).max(160),
   degree: z.string().trim().min(1).max(160),
-  year: z.string().trim().min(1).max(40),
+  year: z.string().trim().max(40).default(""),
 });
 
 const profileFields = {
@@ -66,7 +77,7 @@ const profileFields = {
   education: z.array(educationSchema).max(20),
   currentProject: z.string().trim().max(1000),
   lookingFor: z.string().trim().min(2, "Tell us what you are looking for").max(500),
-  linkedinUrl: z.union([z.literal(""), httpUrl]),
+  linkedinUrl: optionalWebLink,
   contactLink,
   fieldsFilledManually: z.array(z.string().max(80)).max(30),
 };

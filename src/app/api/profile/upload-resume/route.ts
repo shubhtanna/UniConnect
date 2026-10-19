@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { storeFile } from "@/lib/file-storage";
 import {
   extractProfileFields,
+  extractProfileFieldsLocally,
   extractResumeText,
   getMissingExtractionFields,
 } from "@/lib/resume";
@@ -40,8 +41,9 @@ export async function POST(request: Request) {
     if (!matchesResumeSignature(buffer, file.type)) {
       return NextResponse.json({ error: "The selected file is not a valid PDF or DOCX" }, { status: 400 });
     }
-    const text = await extractResumeText(buffer, file.type);
-    if (text.length < 30) {
+    const text = await extractResumeText(buffer, file.type).catch(() => "");
+    // Designed or scanned PDFs have little extractable text; the AI can still read the file.
+    if (text.length < 30 && !(file.type === "application/pdf" && process.env.OPENAI_API_KEY)) {
       return NextResponse.json(
         { error: "We could not read enough text from this resume. Try another file." },
         { status: 422 },
@@ -56,14 +58,20 @@ export async function POST(request: Request) {
         ownerId: user.id,
         kind: "resumes",
       }),
-      extractProfileFields(text),
+      extractProfileFields(text, { buffer, contentType: file.type, filename: file.name })
+        .then((fields) => ({ fields, mode: process.env.OPENAI_API_KEY ? "ai" : "local" }))
+        .catch((error) => {
+          // Never block onboarding on the AI provider; fall back to local parsing.
+          logServerError("resume_ai_extraction_failed", error, "warn");
+          return { fields: extractProfileFieldsLocally(text), mode: "local" };
+        }),
     ]);
 
     return NextResponse.json({
       url,
-      extracted,
-      missingFields: getMissingExtractionFields(extracted),
-      extractionMode: process.env.OPENAI_API_KEY ? "ai" : "local",
+      extracted: extracted.fields,
+      missingFields: getMissingExtractionFields(extracted.fields),
+      extractionMode: extracted.mode,
     });
   } catch (error) {
     logServerError("resume_processing_failed", error);
