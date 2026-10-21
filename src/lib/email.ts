@@ -55,15 +55,29 @@ export async function sendOtpEmail(email: string, otp: string) {
   await getMailTransport().sendMail({
     from: env.SMTP_FROM,
     to: email,
-    subject: "Your UniConnect verification code",
-    text: `Your UniConnect verification code is ${otp}. It expires in 10 minutes. If you did not request this code, you can ignore this email.`,
+    // Plain, low-key wording: phrases like "verify your email" from a new sender
+    // are a classic phishing pattern and push the message into spam.
+    subject: `${otp} is your UniConnect sign-in code`,
+    headers: {
+      "Auto-Submitted": "auto-generated",
+      // A unique reference stops Gmail from threading every code together.
+      "X-Entity-Ref-ID": `${Date.now()}-${otp}`,
+    },
+    text: `Hi,
+
+Your UniConnect sign-in code is ${otp}
+
+It expires in 10 minutes. You received this because someone entered ${email} on UniConnect, the student-built networking app for Masters' Union. If that wasn't you, ignore this email and nothing will happen.
+
+UniConnect`,
     html: `
-      <div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;padding:32px;color:#14251f">
-        <p style="font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:#174c3c">UniConnect</p>
-        <h1 style="font-size:26px;margin:12px 0">Verify your MU email</h1>
-        <p>Use this code to finish signing in:</p>
-        <p style="font-size:34px;font-weight:700;letter-spacing:.18em;margin:24px 0">${otp}</p>
-        <p style="color:#5f6d67">The code expires in 10 minutes. If you did not request it, you can safely ignore this email.</p>
+      <div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;padding:24px;color:#14251f;line-height:1.5">
+        <p>Hi,</p>
+        <p>Your UniConnect sign-in code is:</p>
+        <p style="font-size:30px;font-weight:700;letter-spacing:.15em;margin:16px 0">${otp}</p>
+        <p>It expires in 10 minutes.</p>
+        <p style="color:#5f6d67;font-size:13px">You received this because someone entered ${escapeHtml(email)} on UniConnect, the student-built networking app for Masters' Union. If that wasn't you, ignore this email and nothing will happen.</p>
+        <p style="color:#5f6d67;font-size:13px">UniConnect</p>
       </div>
     `,
   });

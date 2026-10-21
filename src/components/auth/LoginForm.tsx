@@ -91,6 +91,11 @@ export function LoginForm() {
             ? `Preparing a secure code for ${email}…`
             : `We sent a 6-digit code to ${email}. It expires in 10 minutes.`}
       </p>
+      {step !== "email" && status !== "sending" && (
+        <p className="mt-3 rounded-xl border border-amber/30 bg-amber/10 px-4 py-3 text-sm leading-6 text-amber">
+          Not in your inbox? Check <strong>Spam</strong> and tap <strong>&ldquo;Not spam&rdquo;</strong> so future codes arrive in your inbox.
+        </p>
+      )}
 
       {step === "email" ? (
         <form className="mt-9" onSubmit={requestOtp} noValidate>
